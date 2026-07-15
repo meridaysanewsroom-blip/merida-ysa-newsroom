@@ -1,7 +1,14 @@
 (() => {
   "use strict";
 
-  const STORAGE_KEY = "gic-calendar-activities";
+  // ---------- backend config ----------
+  // Paste your Apps Script Web App URL here after deploying Code.gs
+  const CONFIG = {
+    SCRIPT_URL: "https://script.google.com/macros/s/AKfycbw9Deq162Tz6ldex5vFUuRiZ67CvpI4MDKR1jlCpZVaxz4WviOWE44P0DeaKXzvH7d1/exec",
+    POLL_MS: 60000, // re-check the sheet every 60s so the public page stays live
+  };
+  const ADMIN_KEY_STORAGE = "gic-calendar-admin-key";
+
   const TYPE_ORDER = ["Physical", "Spiritual", "Family History"];
   const MONTH_NAMES = ["January","February","March","April","May","June","July","August","September","October","November","December"];
   const DOW_NAMES = ["Sun","Mon","Tue","Wed","Thu","Fri","Sat"];
@@ -14,29 +21,13 @@
   };
 
   /** @type {{id:string, date:string, name:string, theme:string, description:string, type:string, venue:string}[]} */
-  let activities = load();
+  let activities = [];
   let activeFilters = new Set(); // empty = show all
-  let currentView = "list";
+  let currentView = "calendar";
   let editingId = null;
-
-  // ---------- persistence ----------
-  function load() {
-    try {
-      const raw = localStorage.getItem(STORAGE_KEY);
-      return raw ? JSON.parse(raw) : [];
-    } catch (e) {
-      console.warn("Could not read saved activities", e);
-      return [];
-    }
-  }
-
-  function save() {
-    try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(activities));
-    } catch (e) {
-      console.warn("Could not save activities", e);
-    }
-  }
+  let adminKey = sessionStorage.getItem(ADMIN_KEY_STORAGE) || "";
+  let isAdmin = false;
+  let syncing = false;
 
   // ---------- elements ----------
   const form = document.getElementById("activityForm");
@@ -60,9 +51,100 @@
   const btnCalendar = document.getElementById("btnCalendar");
   const printBtn = document.getElementById("printBtn");
   const printDateRange = document.getElementById("printDateRange");
+  const leaderBtn = document.getElementById("leaderBtn");
+  const refreshBtn = document.getElementById("refreshBtn");
+  const syncStatus = document.getElementById("syncStatus");
+  const formCard = document.getElementById("formCard");
+
+  // ---------- backend sync ----------
+  function backendReady() {
+    return CONFIG.SCRIPT_URL && !CONFIG.SCRIPT_URL.startsWith("PASTE_");
+  }
+
+  async function fetchActivities() {
+    if (!backendReady()) {
+      setSyncStatus("Backend not connected yet — see setup instructions.", true);
+      return;
+    }
+    syncing = true;
+    setSyncStatus("Syncing…");
+    try {
+      const res = await fetch(`${CONFIG.SCRIPT_URL}?action=list`);
+      const data = await res.json();
+      if (!data.ok) throw new Error(data.error || "Sync failed");
+      activities = data.activities || [];
+      renderAll();
+      setSyncStatus(`Synced ${new Date().toLocaleTimeString()}`);
+    } catch (err) {
+      console.warn("Sync failed", err);
+      setSyncStatus("Couldn't reach the live calendar. Showing last-loaded data.", true);
+    } finally {
+      syncing = false;
+    }
+  }
+
+  async function postToBackend(payload) {
+    const res = await fetch(CONFIG.SCRIPT_URL, {
+      method: "POST",
+      // text/plain avoids a CORS preflight; Apps Script still parses it as JSON server-side
+      headers: { "Content-Type": "text/plain;charset=utf-8" },
+      body: JSON.stringify({ ...payload, adminKey }),
+    });
+    const data = await res.json();
+    if (!data.ok) throw new Error(data.error || "Request failed");
+    return data;
+  }
+
+  function setSyncStatus(text, isWarning) {
+    if (!syncStatus) return;
+    syncStatus.textContent = text;
+    syncStatus.classList.toggle("warn", !!isWarning);
+  }
+
+  // ---------- leader access ----------
+  function setAdminUi(on) {
+    isAdmin = on;
+    formCard.hidden = !on;
+    leaderBtn.textContent = on ? "Leader mode: on" : "Leader access";
+    leaderBtn.classList.toggle("active", on);
+    renderAll();
+  }
+
+  async function tryLogin(key) {
+    if (!backendReady()) {
+      alert("Connect the backend first (see setup instructions in script.js).");
+      return;
+    }
+    try {
+      const res = await fetch(`${CONFIG.SCRIPT_URL}?action=verify&key=${encodeURIComponent(key)}`);
+      const data = await res.json();
+      if (data.ok) {
+        adminKey = key;
+        sessionStorage.setItem(ADMIN_KEY_STORAGE, key);
+        setAdminUi(true);
+      } else {
+        alert("That key didn't work. Check with a leader for the current access key.");
+      }
+    } catch (err) {
+      alert("Couldn't reach the calendar to verify. Try again in a moment.");
+    }
+  }
+
+  leaderBtn.addEventListener("click", () => {
+    if (isAdmin) {
+      sessionStorage.removeItem(ADMIN_KEY_STORAGE);
+      adminKey = "";
+      setAdminUi(false);
+      return;
+    }
+    const key = prompt("Enter the leader access key:");
+    if (key) tryLogin(key.trim());
+  });
+
+  refreshBtn.addEventListener("click", fetchActivities);
 
   // ---------- form behavior ----------
-  form.addEventListener("submit", (e) => {
+  form.addEventListener("submit", async (e) => {
     e.preventDefault();
     if (!dateInput.value || !typeSelect.value || !nameInput.value.trim()) {
       form.reportValidity();
@@ -79,16 +161,17 @@
       type: typeSelect.value,
     };
 
-    if (editingId) {
-      const idx = activities.findIndex(a => a.id === editingId);
-      if (idx !== -1) activities[idx] = record;
-    } else {
-      activities.push(record);
+    submitBtn.disabled = true;
+    submitBtn.textContent = editingId ? "Saving…" : "Adding…";
+    try {
+      await postToBackend({ action: editingId ? "update" : "add", activity: record });
+      resetForm();
+      await fetchActivities();
+    } catch (err) {
+      alert("Couldn't save that activity: " + err.message);
+      submitBtn.disabled = false;
+      submitBtn.textContent = editingId ? "Save Changes" : "Add to Calendar";
     }
-
-    save();
-    resetForm();
-    renderAll();
   });
 
   cancelEditBtn.addEventListener("click", resetForm);
@@ -97,6 +180,7 @@
     form.reset();
     idInput.value = "";
     editingId = null;
+    submitBtn.disabled = false;
     submitBtn.textContent = "Add to Calendar";
     cancelEditBtn.hidden = true;
     formTitle.textContent = "Add an Activity";
@@ -119,17 +203,20 @@
     cancelEditBtn.hidden = false;
     formTitle.textContent = "Edit Activity";
     formTab.textContent = "Editing";
-    document.getElementById("formCard").scrollIntoView({ behavior: "smooth", block: "start" });
+    formCard.scrollIntoView({ behavior: "smooth", block: "start" });
   }
 
-  function deleteActivity(id) {
+  async function deleteActivity(id) {
     const a = activities.find(x => x.id === id);
     const label = a ? `"${a.name}"` : "this activity";
     if (!confirm(`Remove ${label} from the calendar?`)) return;
-    activities = activities.filter(x => x.id !== id);
-    save();
-    if (editingId === id) resetForm();
-    renderAll();
+    try {
+      await postToBackend({ action: "delete", id });
+      if (editingId === id) resetForm();
+      await fetchActivities();
+    } catch (err) {
+      alert("Couldn't delete that activity: " + err.message);
+    }
   }
 
   // ---------- view toggle ----------
@@ -299,12 +386,13 @@
           <button class="icon-btn" title="Add to phone calendar" data-action="ics" data-id="${a.id}">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/><path d="M12 14v4"/><path d="M10 16h4"/></svg>
           </button>
+          ${isAdmin ? `
           <button class="icon-btn" title="Edit" data-action="edit" data-id="${a.id}">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.12 2.12 0 0 1 3 3L12 15l-4 1 1-4Z"/></svg>
           </button>
           <button class="icon-btn" title="Delete" data-action="delete" data-id="${a.id}">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
-          </button>
+          </button>` : ""}
         </div>
       `;
       monthContainer.appendChild(card);
@@ -465,4 +553,12 @@
 
   setView("calendar");
   renderAll();
+
+  // ---------- go live ----------
+  if (adminKey) tryLogin(adminKey);
+  fetchActivities();
+  setInterval(fetchActivities, CONFIG.POLL_MS);
+  document.addEventListener("visibilitychange", () => {
+    if (document.visibilityState === "visible") fetchActivities();
+  });
 })();
