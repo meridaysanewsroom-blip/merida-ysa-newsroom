@@ -5,6 +5,7 @@
   const TYPE_ORDER = ["Physical", "Spiritual", "Family History"];
   const MONTH_NAMES = ["January","February","March","April","May","June","July","August","September","October","November","December"];
   const DOW_NAMES = ["Sun","Mon","Tue","Wed","Thu","Fri","Sat"];
+  const DOW_NAMES_FULL = ["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"];
 
   const TYPE_ICONS = {
     "Physical": '<polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline>',
@@ -183,6 +184,13 @@
     }[c]));
   }
 
+  const WATERMARK_SVG = `<svg viewBox="0 0 200 200" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <circle cx="100" cy="100" r="96" stroke="currentColor" stroke-width="1.4"/>
+    <circle cx="100" cy="100" r="72" stroke="currentColor" stroke-width="1.4"/>
+    <circle cx="100" cy="100" r="48" stroke="currentColor" stroke-width="1.4"/>
+    <circle cx="100" cy="100" r="24" stroke="currentColor" stroke-width="1.4"/>
+  </svg>`;
+
   function typeIconSvg(type) {
     return `<svg class="type-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">${TYPE_ICONS[type] || ""}</svg>`;
   }
@@ -333,19 +341,34 @@
         const section = document.createElement("div");
         section.className = "cal-month";
 
-        const title = document.createElement("h3");
-        title.className = "cal-month-title";
-        title.textContent = `${MONTH_NAMES[month]} ${year}`;
-        section.appendChild(title);
+        const watermark = document.createElement("div");
+        watermark.className = "cal-watermark";
+        watermark.innerHTML = WATERMARK_SVG;
+        section.appendChild(watermark);
 
-        const grid = document.createElement("div");
-        grid.className = "cal-grid";
-        DOW_NAMES.forEach(dow => {
+        const heading = document.createElement("div");
+        heading.className = "cal-heading";
+        heading.innerHTML = `
+          <h3 class="cal-month-title"><span class="cal-month-name">${MONTH_NAMES[month]}</span><span class="cal-month-year">${year}</span></h3>
+          <span class="cal-month-count">${monthItems.length} ${monthItems.length === 1 ? "activity" : "activities"}</span>
+        `;
+        section.appendChild(heading);
+
+        const table = document.createElement("div");
+        table.className = "cal-table";
+
+        const dowRow = document.createElement("div");
+        dowRow.className = "cal-dow-row";
+        DOW_NAMES_FULL.forEach(dow => {
           const cell = document.createElement("div");
           cell.className = "cal-dow";
           cell.textContent = dow;
-          grid.appendChild(cell);
+          dowRow.appendChild(cell);
         });
+        table.appendChild(dowRow);
+
+        const grid = document.createElement("div");
+        grid.className = "cal-grid";
 
         const firstDow = new Date(year, month, 1).getDay();
         const daysInMonth = new Date(year, month + 1, 0).getDate();
@@ -356,29 +379,60 @@
           grid.appendChild(empty);
         }
 
+        const MAX_PILLS = 2;
+
         for (let day = 1; day <= daysInMonth; day++) {
           const cell = document.createElement("div");
           cell.className = "cal-cell";
+          const dayItems = monthItems.filter(a => parseLocalDate(a.date).getDate() === day);
+
           const num = document.createElement("div");
           num.className = "cell-num";
           num.textContent = day;
           cell.appendChild(num);
 
-          monthItems
-            .filter(a => parseLocalDate(a.date).getDate() === day)
-            .forEach(a => {
+          if (dayItems.length) {
+            const ticks = document.createElement("div");
+            ticks.className = "cell-ticks";
+            dayItems.forEach(a => {
+              const tick = document.createElement("div");
+              tick.className = "cal-tick";
+              tick.dataset.type = a.type;
+              ticks.appendChild(tick);
+            });
+            cell.appendChild(ticks);
+
+            const itemsWrap = document.createElement("div");
+            itemsWrap.className = "cell-items";
+            dayItems.slice(0, MAX_PILLS).forEach(a => {
               const pill = document.createElement("div");
               pill.className = "cal-pill";
               pill.dataset.type = a.type;
               pill.title = a.venue ? `${a.name} (${a.type}) — ${a.venue}` : `${a.name} (${a.type})`;
               pill.textContent = a.name;
-              cell.appendChild(pill);
+              itemsWrap.appendChild(pill);
             });
+            if (dayItems.length > MAX_PILLS) {
+              const more = document.createElement("div");
+              more.className = "cal-more";
+              more.textContent = `+${dayItems.length - MAX_PILLS} more`;
+              more.title = dayItems.slice(MAX_PILLS).map(a => a.name).join(", ");
+              itemsWrap.appendChild(more);
+            }
+            cell.appendChild(itemsWrap);
+          }
 
           grid.appendChild(cell);
         }
 
-        section.appendChild(grid);
+        table.appendChild(grid);
+        section.appendChild(table);
+
+        const footer = document.createElement("div");
+        footer.className = "cal-footer";
+        footer.textContent = `${MONTH_NAMES[month]} ${year} · Gathering in Christ`;
+        section.appendChild(footer);
+
         calendarView.appendChild(section);
       });
   }
@@ -409,6 +463,6 @@
     emptyState.style.display = activities.length ? "none" : "block";
   }
 
-  setView("list");
+  setView("calendar");
   renderAll();
 })();
