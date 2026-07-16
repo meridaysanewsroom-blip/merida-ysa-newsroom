@@ -28,6 +28,7 @@
   let adminKey = sessionStorage.getItem(ADMIN_KEY_STORAGE) || "";
   let isAdmin = false;
   let syncing = false;
+  let hasSyncedOnce = false;
 
   // ---------- elements ----------
   const form = document.getElementById("activityForm");
@@ -52,9 +53,34 @@
   const printBtn = document.getElementById("printBtn");
   const printDateRange = document.getElementById("printDateRange");
   const leaderBtn = document.getElementById("leaderBtn");
+  const leaderDropdown = document.getElementById("leaderDropdown");
+  const viewKeyBtn = document.getElementById("viewKeyBtn");
+  const logoutBtn = document.getElementById("logoutBtn");
   const refreshBtn = document.getElementById("refreshBtn");
   const syncStatus = document.getElementById("syncStatus");
   const formCard = document.getElementById("formCard");
+  const leaderModalOverlay = document.getElementById("leaderModalOverlay");
+  const leaderKeyInput = document.getElementById("leaderKeyInput");
+  const leaderModalError = document.getElementById("leaderModalError");
+  const leaderModalCancel = document.getElementById("leaderModalCancel");
+  const leaderModalSubmit = document.getElementById("leaderModalSubmit");
+  const changeKeyBtn = document.getElementById("changeKeyBtn");
+  const changeKeyModalOverlay = document.getElementById("changeKeyModalOverlay");
+  const newKeyInput = document.getElementById("newKeyInput");
+  const confirmKeyInput = document.getElementById("confirmKeyInput");
+  const changeKeyModalError = document.getElementById("changeKeyModalError");
+  const changeKeyModalCancel = document.getElementById("changeKeyModalCancel");
+  const changeKeyModalSubmit = document.getElementById("changeKeyModalSubmit");
+  const viewKeyModalOverlay = document.getElementById("viewKeyModalOverlay");
+  const viewKeyValue = document.getElementById("viewKeyValue");
+  const viewKeyToggle = document.getElementById("viewKeyToggle");
+  const viewKeyCopy = document.getElementById("viewKeyCopy");
+  const viewKeyModalError = document.getElementById("viewKeyModalError");
+  const viewKeyModalClose = document.getElementById("viewKeyModalClose");
+  const viewKeyChangeInstead = document.getElementById("viewKeyChangeInstead");
+  const toastStack = document.getElementById("toastStack");
+  const nextUpBanner = document.getElementById("nextUpBanner");
+  const skeletonState = document.getElementById("skeletonState");
 
   // ---------- backend sync ----------
   function backendReady() {
@@ -67,20 +93,47 @@
       return;
     }
     syncing = true;
+    if (!hasSyncedOnce) skeletonState.hidden = false;
     setSyncStatus("Syncing…");
     try {
       const res = await fetch(`${CONFIG.SCRIPT_URL}?action=list`);
       const data = await res.json();
       if (!data.ok) throw new Error(data.error || "Sync failed");
       activities = data.activities || [];
+      hasSyncedOnce = true;
+      skeletonState.hidden = true;
       renderAll();
       setSyncStatus(`Synced ${new Date().toLocaleTimeString()}`);
     } catch (err) {
       console.warn("Sync failed", err);
+      skeletonState.hidden = true;
       setSyncStatus("Couldn't reach the live calendar. Showing last-loaded data.", true);
     } finally {
       syncing = false;
     }
+  }
+
+  // ---------- toasts (replaces alert()) ----------
+  function toast(message, opts) {
+    const isError = !!(opts && opts.error);
+    const el = document.createElement("div");
+    el.className = "toast" + (isError ? " error" : "");
+    el.setAttribute("role", "status");
+    el.innerHTML = `
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${
+        isError
+          ? '<circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>'
+          : '<path d="M20 6 9 17l-5-5"/>'
+      }</svg>
+      <span></span>
+    `;
+    el.querySelector("span").textContent = message;
+    toastStack.appendChild(el);
+    const life = (opts && opts.duration) || 4200;
+    setTimeout(() => {
+      el.classList.add("leaving");
+      setTimeout(() => el.remove(), 200);
+    }, life);
   }
 
   async function postToBackend(payload) {
@@ -107,13 +160,30 @@
     formCard.hidden = !on;
     leaderBtn.textContent = on ? "Leader mode: on" : "Leader access";
     leaderBtn.classList.toggle("active", on);
+    leaderBtn.setAttribute("aria-haspopup", "true");
+    if (!on) closeLeaderDropdown();
     renderAll();
   }
 
+  function openLeaderDropdown() {
+    leaderDropdown.hidden = false;
+    leaderBtn.setAttribute("aria-expanded", "true");
+  }
+  function closeLeaderDropdown() {
+    leaderDropdown.hidden = true;
+    leaderBtn.setAttribute("aria-expanded", "false");
+  }
+  document.addEventListener("click", (e) => {
+    if (!leaderDropdown.hidden && !e.target.closest(".leader-menu-wrap")) closeLeaderDropdown();
+  });
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape" && !leaderDropdown.hidden) closeLeaderDropdown();
+  });
+
   async function tryLogin(key) {
     if (!backendReady()) {
-      alert("Connect the backend first (see setup instructions in script.js).");
-      return;
+      toast("Connect the backend first (see setup instructions in script.js).", { error: true });
+      return false;
     }
     try {
       const res = await fetch(`${CONFIG.SCRIPT_URL}?action=verify&key=${encodeURIComponent(key)}`);
@@ -122,26 +192,186 @@
         adminKey = key;
         sessionStorage.setItem(ADMIN_KEY_STORAGE, key);
         setAdminUi(true);
-      } else {
-        alert("That key didn't work. Check with a leader for the current access key.");
+        return true;
       }
+      return false;
     } catch (err) {
-      alert("Couldn't reach the calendar to verify. Try again in a moment.");
+      return false;
     }
   }
 
-  leaderBtn.addEventListener("click", () => {
+  function openLeaderModal() {
+    leaderModalError.hidden = true;
+    leaderKeyInput.value = "";
+    leaderModalOverlay.hidden = false;
+    leaderKeyInput.focus();
+  }
+
+  function closeLeaderModal() {
+    leaderModalOverlay.hidden = true;
+  }
+
+  async function submitLeaderModal() {
+    const key = leaderKeyInput.value.trim();
+    if (!key) return;
+    leaderModalSubmit.disabled = true;
+    leaderModalSubmit.textContent = "Checking…";
+    const ok = await tryLogin(key);
+    leaderModalSubmit.disabled = false;
+    leaderModalSubmit.textContent = "Unlock";
+    if (ok) {
+      closeLeaderModal();
+    } else {
+      leaderModalError.hidden = false;
+      leaderKeyInput.select();
+    }
+  }
+
+  leaderBtn.addEventListener("click", (e) => {
     if (isAdmin) {
-      sessionStorage.removeItem(ADMIN_KEY_STORAGE);
-      adminKey = "";
-      setAdminUi(false);
+      e.stopPropagation();
+      leaderDropdown.hidden ? openLeaderDropdown() : closeLeaderDropdown();
       return;
     }
-    const key = prompt("Enter the leader access key:");
-    if (key) tryLogin(key.trim());
+    openLeaderModal();
+  });
+
+  logoutBtn.addEventListener("click", () => {
+    sessionStorage.removeItem(ADMIN_KEY_STORAGE);
+    adminKey = "";
+    closeLeaderDropdown();
+    setAdminUi(false);
+    toast("Logged out of leader mode.");
+  });
+
+  leaderModalCancel.addEventListener("click", closeLeaderModal);
+  leaderModalOverlay.addEventListener("click", (e) => {
+    if (e.target === leaderModalOverlay) closeLeaderModal();
+  });
+  leaderModalSubmit.addEventListener("click", submitLeaderModal);
+  leaderKeyInput.addEventListener("keydown", (e) => {
+    if (e.key === "Enter") submitLeaderModal();
+    if (e.key === "Escape") closeLeaderModal();
+  });
+
+  // ---------- password reveal toggles (login + change-key inputs) ----------
+  document.querySelectorAll(".input-toggle-btn[data-toggle-for]").forEach(btn => {
+    btn.addEventListener("click", () => {
+      const input = document.getElementById(btn.dataset.toggleFor);
+      const showing = input.type === "text";
+      input.type = showing ? "password" : "text";
+      btn.setAttribute("aria-label", showing ? "Show key" : "Hide key");
+      btn.title = showing ? "Show key" : "Hide key";
+    });
+  });
+
+  // ---------- view / copy current key ----------
+  let revealedKey = "";
+  function openViewKeyModal() {
+    closeLeaderDropdown();
+    revealedKey = "";
+    viewKeyValue.textContent = "••••••••";
+    viewKeyModalError.hidden = true;
+    viewKeyModalOverlay.hidden = false;
+    loadCurrentKey();
+  }
+  function closeViewKeyModal() {
+    viewKeyModalOverlay.hidden = true;
+  }
+  async function loadCurrentKey() {
+    try {
+      const res = await fetch(`${CONFIG.SCRIPT_URL}?action=getkey&key=${encodeURIComponent(adminKey)}`);
+      const data = await res.json();
+      if (!data.ok) throw new Error(data.error || "Unauthorized");
+      revealedKey = data.key || "";
+      viewKeyValue.textContent = "•".repeat(Math.max(revealedKey.length, 8));
+    } catch (err) {
+      viewKeyModalError.textContent = "Couldn't load the current key: " + err.message;
+      viewKeyModalError.hidden = false;
+    }
+  }
+  viewKeyBtn.addEventListener("click", openViewKeyModal);
+  viewKeyModalClose.addEventListener("click", closeViewKeyModal);
+  viewKeyModalOverlay.addEventListener("click", (e) => {
+    if (e.target === viewKeyModalOverlay) closeViewKeyModal();
+  });
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape" && !viewKeyModalOverlay.hidden) closeViewKeyModal();
+  });
+  viewKeyToggle.addEventListener("click", () => {
+    if (!revealedKey) return;
+    const isMasked = viewKeyValue.textContent.startsWith("•");
+    viewKeyValue.textContent = isMasked ? revealedKey : "•".repeat(Math.max(revealedKey.length, 8));
+  });
+  viewKeyCopy.addEventListener("click", async () => {
+    if (!revealedKey) return;
+    try {
+      await navigator.clipboard.writeText(revealedKey);
+      viewKeyCopy.classList.add("copied");
+      toast("Access key copied to clipboard.");
+      setTimeout(() => viewKeyCopy.classList.remove("copied"), 1200);
+    } catch (err) {
+      toast("Couldn't copy automatically — select and copy manually.", { error: true });
+    }
+  });
+  viewKeyChangeInstead.addEventListener("click", () => {
+    closeViewKeyModal();
+    openChangeKeyModal();
   });
 
   refreshBtn.addEventListener("click", fetchActivities);
+
+  function openChangeKeyModal() {
+    changeKeyModalError.hidden = true;
+    newKeyInput.value = "";
+    confirmKeyInput.value = "";
+    changeKeyModalOverlay.hidden = false;
+    newKeyInput.focus();
+  }
+
+  function closeChangeKeyModal() {
+    changeKeyModalOverlay.hidden = true;
+  }
+
+  async function submitChangeKeyModal() {
+    const newKey = newKeyInput.value.trim();
+    const confirmKey = confirmKeyInput.value.trim();
+    if (newKey.length < 4 || newKey !== confirmKey) {
+      changeKeyModalError.hidden = false;
+      return;
+    }
+    changeKeyModalSubmit.disabled = true;
+    changeKeyModalSubmit.textContent = "Saving…";
+    try {
+      await postToBackend({ action: "setKey", newKey });
+      adminKey = newKey;
+      sessionStorage.setItem(ADMIN_KEY_STORAGE, newKey);
+      closeChangeKeyModal();
+      toast("Access key updated. Share the new key with your leadership team.");
+    } catch (err) {
+      changeKeyModalError.hidden = false;
+      changeKeyModalError.textContent = "Couldn't save the new key: " + err.message;
+    } finally {
+      changeKeyModalSubmit.disabled = false;
+      changeKeyModalSubmit.textContent = "Save new key";
+    }
+  }
+
+  changeKeyBtn.addEventListener("click", () => {
+    closeLeaderDropdown();
+    openChangeKeyModal();
+  });
+  changeKeyModalCancel.addEventListener("click", closeChangeKeyModal);
+  changeKeyModalOverlay.addEventListener("click", (e) => {
+    if (e.target === changeKeyModalOverlay) closeChangeKeyModal();
+  });
+  changeKeyModalSubmit.addEventListener("click", submitChangeKeyModal);
+  [newKeyInput, confirmKeyInput].forEach(input => {
+    input.addEventListener("keydown", (e) => {
+      if (e.key === "Enter") submitChangeKeyModal();
+      if (e.key === "Escape") closeChangeKeyModal();
+    });
+  });
 
   // ---------- form behavior ----------
   form.addEventListener("submit", async (e) => {
@@ -163,12 +393,14 @@
 
     submitBtn.disabled = true;
     submitBtn.textContent = editingId ? "Saving…" : "Adding…";
+    const wasEditing = !!editingId;
     try {
       await postToBackend({ action: editingId ? "update" : "add", activity: record });
       resetForm();
       await fetchActivities();
+      toast(wasEditing ? "Activity updated." : "Activity added to the calendar.");
     } catch (err) {
-      alert("Couldn't save that activity: " + err.message);
+      toast("Couldn't save that activity: " + err.message, { error: true });
       submitBtn.disabled = false;
       submitBtn.textContent = editingId ? "Save Changes" : "Add to Calendar";
     }
@@ -214,8 +446,9 @@
       await postToBackend({ action: "delete", id });
       if (editingId === id) resetForm();
       await fetchActivities();
+      toast(`Removed ${label} from the calendar.`);
     } catch (err) {
-      alert("Couldn't delete that activity: " + err.message);
+      toast("Couldn't delete that activity: " + err.message, { error: true });
     }
   }
 
@@ -305,12 +538,12 @@
 
   function downloadIcs(a) {
     const dt = toIcsDate(a.date);
-    const uid = `${a.id}@gathering-in-christ`;
+    const uid = `${a.id}@merida-ysa-newsroom`;
     const stamp = new Date().toISOString().replace(/[-:]/g, "").split(".")[0] + "Z";
     const lines = [
       "BEGIN:VCALENDAR",
       "VERSION:2.0",
-      "PRODID:-//Gathering in Christ//Activity Calendar//EN",
+      "PRODID:-//Merida YSA Newsroom//Activity Calendar//EN",
       "BEGIN:VEVENT",
       `UID:${uid}`,
       `DTSTAMP:${stamp}`,
@@ -468,10 +701,12 @@
         }
 
         const MAX_PILLS = 2;
+        const today = new Date();
+        const isCurrentMonth = today.getFullYear() === year && today.getMonth() === month;
 
         for (let day = 1; day <= daysInMonth; day++) {
           const cell = document.createElement("div");
-          cell.className = "cal-cell";
+          cell.className = "cal-cell" + (isCurrentMonth && today.getDate() === day ? " is-today" : "");
           const dayItems = monthItems.filter(a => parseLocalDate(a.date).getDate() === day);
 
           const num = document.createElement("div");
@@ -518,7 +753,7 @@
 
         const footer = document.createElement("div");
         footer.className = "cal-footer";
-        footer.textContent = `${MONTH_NAMES[month]} ${year} · Gathering in Christ`;
+        footer.textContent = `${MONTH_NAMES[month]} ${year} · Merida YSA Newsroom`;
         section.appendChild(footer);
 
         calendarView.appendChild(section);
@@ -547,8 +782,38 @@
     renderFilterChips();
     renderList();
     renderCalendar();
+    renderNextUp();
     updatePrintRange();
-    emptyState.style.display = activities.length ? "none" : "block";
+    emptyState.hidden = !hasSyncedOnce || activities.length > 0;
+  }
+
+  // ---------- next up banner ----------
+  function renderNextUp() {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const upcoming = activities
+      .filter(a => parseLocalDate(a.date) >= today)
+      .sort((a, b) => a.date.localeCompare(b.date))[0];
+
+    if (!upcoming) {
+      nextUpBanner.hidden = true;
+      return;
+    }
+    const d = parseLocalDate(upcoming.date);
+    const cd = countdownLabel(upcoming.date);
+    nextUpBanner.hidden = false;
+    nextUpBanner.innerHTML = `
+      <div class="next-up-date">
+        <div class="dom">${String(d.getDate()).padStart(2, "0")}</div>
+        <div class="mon">${MONTH_NAMES[d.getMonth()].slice(0, 3)}</div>
+      </div>
+      <div class="next-up-body">
+        <p class="next-up-eyebrow">Next up &middot; ${cd.text}</p>
+        <p class="next-up-name">${escapeHtml(upcoming.name)}</p>
+        ${upcoming.venue ? `<p class="next-up-meta">${escapeHtml(upcoming.venue)}</p>` : ""}
+      </div>
+      <span class="next-up-badge">${escapeHtml(upcoming.type)}</span>
+    `;
   }
 
   setView("calendar");
