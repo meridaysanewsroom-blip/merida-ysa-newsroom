@@ -8,34 +8,34 @@
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,600;0,9..144,700;1,9..144,500&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
 <style>
 /* ============================================================
-   TOKENS — "The Firmament" palette, drawn from the Christus
-   reference: deep night sky, white marble, a glint of gold.
+   TOKENS — "Gathering Light" palette: warm cream paper, brass
+   gold, terracotta clay, sage — the GIC family palette.
    ============================================================ */
 :root{
-  --void:        #0A1024;
-  --void-deep:   #05070F;
-  --void-soft:   #16204A;
-  --marble:      #F7F5EE;
-  --marble-dim:  #ECE8DC;
-  --ink:         #1B2137;
-  --ink-soft:    #545E7D;
-  --line:        #DEDACB;
-  --starlight:   #E9ECFA;
-  --gold:        #C9A464;
-  --gold-dark:   #9C7B3E;
+  --void:        #1B2A4A;
+  --void-deep:   #101A30;
+  --void-soft:   #28406B;
+  --marble:      #FFFDF8;
+  --marble-dim:  #FBF3E3;
+  --ink:         #2B2116;
+  --ink-soft:    #6B5D4B;
+  --line:        #E7D9BE;
+  --starlight:   #FFF9EC;
+  --gold:        #C68A2E;
+  --gold-dark:   #93641E;
   --white:       #FFFFFF;
 
   /* the three-way lens the whole calendar is filtered through */
-  --physical:    #B5643A;   /* clay — the body in motion */
-  --spiritual:   #C9A464;   /* gold — the halo, the light */
-  --family:      #3E6259;   /* deep sage — roots and lineage */
+  --physical:    #B3552D;   /* terracotta clay — the body in motion */
+  --spiritual:   #C68A2E;   /* brass gold — the halo, the light */
+  --family:      #5C7A52;   /* sage — roots and lineage */
 
   --font-display: "Fraunces", Georgia, serif;
   --font-body:    "Inter", -apple-system, sans-serif;
   --font-mono:    "IBM Plex Mono", monospace;
 
   --radius: 4px;
-  --shadow-card: 0 1px 2px rgba(10,16,36,0.08), 0 10px 26px -10px rgba(10,16,36,0.28);
+  --shadow-card: 0 1px 2px rgba(43,33,22,0.06), 0 10px 26px -10px rgba(43,33,22,0.16);
 }
 
 *{ box-sizing: border-box; }
@@ -52,38 +52,52 @@ body{
 .print-only{ display: none; }
 
 /* ============================================================
-   MASTHEAD — the starfield, and Christ's radiant halo behind
-   the title (concentric "gathering rings" motif)
+   TOP NAV — separated from the masthead & toolbar so the
+   public Facebook-facing page reads clean; leader controls
+   live here, out of the way of the calendar itself.
+   ============================================================ */
+.topnav{
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+  padding: 0.7rem 1.5rem;
+  background: var(--marble);
+  border-bottom: 1px solid var(--line);
+}
+.topnav-brand{
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 0.95rem;
+  color: var(--void);
+  letter-spacing: 0.01em;
+}
+.topnav-actions{
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+#leaderBtn.active{ background: var(--void); color: var(--starlight); border-color: var(--void); }
+.sync-status{
+  font-family: var(--font-mono);
+  font-size: 0.68rem;
+  color: var(--ink-soft);
+  opacity: 0.8;
+  white-space: nowrap;
+}
+.sync-status.warn{ color: var(--physical); opacity: 1; }
+
+/* ============================================================
+   MASTHEAD — warm radiant halo behind the title, echoing the
+   Christus reference without the night-sky feel
    ============================================================ */
 .masthead{
   position: relative;
   background: radial-gradient(120% 140% at 50% -10%, var(--void-soft) 0%, var(--void) 45%, var(--void-deep) 100%);
   color: var(--starlight);
-  padding: 4rem 1.5rem 4.5rem;
+  padding: 3.4rem 1.5rem 4rem;
   overflow: hidden;
-}
-.starfield{
-  position: absolute; inset: 0;
-  background-image:
-    radial-gradient(1.5px 1.5px at 12% 22%, #fff 100%, transparent 0),
-    radial-gradient(1px 1px at 28% 68%, #fff 100%, transparent 0),
-    radial-gradient(1.5px 1.5px at 44% 12%, #fff 100%, transparent 0),
-    radial-gradient(1px 1px at 62% 40%, #fff 100%, transparent 0),
-    radial-gradient(1.5px 1.5px at 76% 78%, #fff 100%, transparent 0),
-    radial-gradient(1px 1px at 88% 24%, #fff 100%, transparent 0),
-    radial-gradient(1px 1px at 8% 82%, #fff 100%, transparent 0),
-    radial-gradient(1.5px 1.5px at 95% 60%, #fff 100%, transparent 0),
-    radial-gradient(1px 1px at 55% 88%, #fff 100%, transparent 0),
-    radial-gradient(1px 1px at 35% 45%, #fff 100%, transparent 0);
-  opacity: 0.55;
-  animation: twinkle 5s ease-in-out infinite alternate;
-}
-@keyframes twinkle{
-  from{ opacity: 0.35; }
-  to{ opacity: 0.7; }
-}
-@media (prefers-reduced-motion: reduce){
-  .starfield{ animation: none; opacity: 0.5; }
 }
 .halo{
   position: absolute;
@@ -91,7 +105,7 @@ body{
   width: 640px; height: 640px;
   transform: translateX(-50%);
   border-radius: 50%;
-  background: radial-gradient(circle, rgba(201,164,100,0.16) 0%, rgba(201,164,100,0.05) 40%, transparent 70%);
+  background: radial-gradient(circle, rgba(198,138,46,0.22) 0%, rgba(198,138,46,0.07) 40%, transparent 70%);
   pointer-events: none;
 }
 .masthead-inner{ max-width: 880px; margin: 0 auto; position: relative; z-index: 1; }
@@ -113,7 +127,7 @@ body{
 }
 .subtitle{
   margin: 0.55rem 0 0;
-  color: #B9C2DE;
+  color: #D9C6A3;
   font-size: 1.02rem;
   font-style: italic;
   font-family: var(--font-display);
@@ -296,16 +310,6 @@ body{
 .chip[data-type="Physical"].active{ background: var(--physical); }
 .chip[data-type="Spiritual"].active{ background: var(--gold-dark); }
 .chip[data-type="Family History"].active{ background: var(--family); }
-
-.sync-status{
-  font-family: var(--font-mono);
-  font-size: 0.68rem;
-  color: var(--ink-soft);
-  opacity: 0.8;
-  white-space: nowrap;
-}
-.sync-status.warn{ color: var(--physical); opacity: 1; }
-#leaderBtn.active{ background: var(--void); color: var(--starlight); border-color: var(--void); }
 
 /* ============================================================
    EMPTY STATE
@@ -617,6 +621,9 @@ footer{
   .cal-cell .cell-num{ font-size: 0.68rem; }
   .cal-pill{ font-size: 0.54rem; }
   .cal-watermark{ width: 220px; height: 220px; right: -50px; bottom: -50px; }
+  .topnav{ padding: 0.55rem 1rem; }
+  .topnav-brand{ font-size: 0.82rem; }
+  .sync-status{ display: none; }
 }
 
 /* ============================================================
@@ -677,8 +684,18 @@ footer{
 </head>
 <body>
 
+<header class="topnav no-print">
+  <span class="topnav-brand">Gathering in Christ</span>
+  <div class="topnav-actions">
+    <span class="sync-status" id="syncStatus">Connecting…</span>
+    <button class="icon-btn" id="refreshBtn" title="Refresh now">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
+    </button>
+    <button class="btn btn-outline" id="leaderBtn">Leader access</button>
+  </div>
+</header>
+
 <div class="masthead no-print">
-  <div class="starfield" aria-hidden="true"></div>
   <div class="halo" aria-hidden="true"></div>
   <div class="masthead-inner">
     <p class="eyebrow">Gathering in Christ &middot; Ormoc Stake YSA</p>
@@ -749,12 +766,6 @@ footer{
       </div>
 
       <div class="filter-chips" id="filterChips"></div>
-
-      <span class="sync-status" id="syncStatus">Connecting…</span>
-      <button class="btn btn-ghost" id="refreshBtn" title="Refresh now">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
-      </button>
-      <button class="btn btn-outline" id="leaderBtn">Leader access</button>
 
       <button class="btn btn-outline" id="printBtn">
         <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
