@@ -3,12 +3,12 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Gathering in Christ &mdash; Activity Calendar</title>
+<title>Merida YSA Newsroom &mdash; Activity Calendar</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,600;0,9..144,700;1,9..144,500&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
 <style>
 /* ============================================================
-   TOKENS — "Gathering Light" palette: warm cream paper, brass
+   TOKENS — "Merida YSA Newsroom" palette: warm cream paper, brass
    gold, terracotta clay, sage — the GIC family palette.
    ============================================================ */
 :root{
@@ -598,6 +598,287 @@ body{
 }
 
 /* ============================================================
+   LEADER ACCESS MODAL — centered overlay, replaces prompt()
+   ============================================================ */
+.modal-overlay{
+  position: fixed;
+  inset: 0;
+  background: rgba(27,20,12,0.55);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+  z-index: 50;
+}
+.modal-card{
+  background: var(--marble);
+  border-radius: 10px;
+  border-top: 3px solid var(--gold);
+  box-shadow: 0 20px 50px -14px rgba(27,20,12,0.45);
+  padding: 1.8rem 1.8rem 1.6rem;
+  width: 100%;
+  max-width: 360px;
+}
+.modal-eyebrow{
+  font-family: var(--font-mono);
+  font-size: 0.68rem;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--gold-dark);
+  font-weight: 700;
+  margin: 0 0 0.5rem;
+}
+.modal-card h3{
+  font-family: var(--font-display);
+  font-size: 1.3rem;
+  font-weight: 600;
+  margin: 0 0 0.5rem;
+  color: var(--ink);
+}
+.modal-sub{
+  font-size: 0.86rem;
+  color: var(--ink-soft);
+  margin: 0 0 1.1rem;
+  line-height: 1.5;
+}
+.modal-card input{
+  width: 100%;
+  padding: 0.62rem 0.75rem;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  font-family: var(--font-body);
+  font-size: 0.95rem;
+  color: var(--ink);
+  background: var(--marble-dim);
+}
+.modal-card input:focus{
+  outline: none;
+  border-color: var(--gold);
+  box-shadow: 0 0 0 3px rgba(198,138,46,0.22);
+  background: var(--white);
+}
+.modal-error{
+  font-size: 0.8rem;
+  color: var(--physical);
+  margin: 0.6rem 0 0;
+}
+.modal-actions{
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.6rem;
+  margin-top: 1.3rem;
+}
+
+/* ============================================================
+   TOASTS — replaces alert()/confirm() with in-flow feedback
+   ============================================================ */
+.toast-stack{
+  position: fixed;
+  bottom: 1.2rem;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 90;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  width: 100%;
+  max-width: 380px;
+  padding: 0 1rem;
+  pointer-events: none;
+}
+.toast{
+  pointer-events: auto;
+  background: var(--void);
+  color: var(--starlight);
+  font-size: 0.86rem;
+  padding: 0.75rem 1rem;
+  border-radius: var(--radius);
+  box-shadow: 0 10px 30px -8px rgba(16,26,48,0.45);
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  border-left: 3px solid var(--gold);
+  animation: toast-in 0.22s cubic-bezier(.2,.8,.3,1);
+}
+.toast.error{ border-left-color: var(--physical); }
+.toast svg{ flex: none; }
+.toast.leaving{ animation: toast-out 0.18s ease forwards; }
+@keyframes toast-in{ from{ opacity:0; transform: translateY(8px); } to{ opacity:1; transform: translateY(0); } }
+@keyframes toast-out{ to{ opacity:0; transform: translateY(-6px); } }
+@media (prefers-reduced-motion: reduce){
+  .toast, .toast.leaving{ animation: none; }
+}
+
+/* ============================================================
+   LEADER MENU — dropdown that replaces the loose second button
+   ============================================================ */
+.leader-menu-wrap{ position: relative; }
+.leader-dropdown{
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  background: var(--marble);
+  border-radius: var(--radius);
+  border-top: 3px solid var(--gold);
+  box-shadow: 0 16px 40px -12px rgba(27,20,12,0.4);
+  width: 260px;
+  padding: 0.4rem;
+  z-index: 60;
+  animation: dropdown-in 0.14s ease;
+}
+@keyframes dropdown-in{ from{ opacity:0; transform: translateY(-4px); } to{ opacity:1; transform: translateY(0); } }
+.leader-dropdown-item{
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  width: 100%;
+  text-align: left;
+  background: transparent;
+  border: none;
+  padding: 0.6rem 0.65rem;
+  font-family: var(--font-body);
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--ink);
+  border-radius: 4px;
+  cursor: pointer;
+}
+.leader-dropdown-item:hover{ background: var(--marble-dim); }
+.leader-dropdown-item.danger{ color: var(--physical); }
+.leader-dropdown-item svg{ flex: none; opacity: 0.75; }
+.leader-dropdown-divider{ height: 1px; background: var(--line); margin: 0.3rem 0.2rem; }
+
+/* key reveal panel (inside modal) */
+.key-reveal-row{
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: var(--marble-dim);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 0.6rem 0.75rem;
+}
+.key-reveal-row code{
+  flex: 1;
+  font-family: var(--font-mono);
+  font-size: 0.92rem;
+  letter-spacing: 0.03em;
+  color: var(--ink);
+  word-break: break-all;
+}
+.key-reveal-row .icon-btn{ color: var(--ink-soft); }
+.key-reveal-row .icon-btn.copied{ color: var(--family); }
+
+.input-with-toggle{ position: relative; }
+.input-with-toggle input{ padding-right: 2.4rem !important; }
+.input-toggle-btn{
+  position: absolute;
+  right: 0.5rem;
+  top: 50%;
+  transform: translateY(-50%);
+  background: transparent;
+  border: none;
+  color: var(--ink-soft);
+  cursor: pointer;
+  padding: 0.3rem;
+  display: flex;
+}
+.input-toggle-btn:hover{ color: var(--ink); }
+
+/* ============================================================
+   NEXT UP BANNER
+   ============================================================ */
+.next-up{
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  background: linear-gradient(120deg, var(--void) 0%, var(--void-soft) 100%);
+  color: var(--starlight);
+  border-radius: var(--radius);
+  padding: 1rem 1.3rem;
+  margin-bottom: 1.4rem;
+  box-shadow: var(--shadow-card);
+}
+.next-up-date{
+  font-family: var(--font-mono);
+  text-align: center;
+  line-height: 1.1;
+  flex: none;
+  min-width: 46px;
+}
+.next-up-date .dom{ font-size: 1.5rem; font-weight: 700; }
+.next-up-date .mon{ font-size: 0.62rem; text-transform: uppercase; opacity: 0.75; }
+.next-up-body{ flex: 1; min-width: 0; }
+.next-up-eyebrow{
+  font-family: var(--font-mono);
+  font-size: 0.62rem;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--gold);
+  font-weight: 700;
+  margin: 0 0 0.15rem;
+}
+.next-up-name{
+  font-family: var(--font-display);
+  font-size: 1.08rem;
+  font-weight: 600;
+  margin: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.next-up-meta{ font-size: 0.8rem; opacity: 0.8; margin: 0.15rem 0 0; }
+.next-up-badge{
+  flex: none;
+  font-family: var(--font-mono);
+  font-size: 0.66rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  font-weight: 700;
+  padding: 0.25rem 0.6rem;
+  border-radius: 20px;
+  background: rgba(255,255,255,0.14);
+}
+
+/* ============================================================
+   TODAY HIGHLIGHT — calendar grid
+   ============================================================ */
+.cal-cell.is-today{
+  background: var(--starlight);
+  box-shadow: inset 0 0 0 2px var(--gold);
+}
+.cal-cell.is-today .cell-num{
+  color: var(--gold-dark);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* ============================================================
+   SKELETON LOADING — shown on first sync before data arrives
+   ============================================================ */
+.skeleton-wrap{ display: flex; flex-direction: column; gap: 0.7rem; }
+.skeleton-card{
+  height: 78px;
+  border-radius: var(--radius);
+  background: linear-gradient(100deg, var(--marble) 30%, var(--marble-dim) 50%, var(--marble) 70%);
+  background-size: 200% 100%;
+  animation: skeleton-sheen 1.3s ease-in-out infinite;
+  box-shadow: var(--shadow-card);
+}
+@keyframes skeleton-sheen{
+  0%{ background-position: 200% 0; }
+  100%{ background-position: -200% 0; }
+}
+@media (prefers-reduced-motion: reduce){
+  .skeleton-card{ animation: none; }
+}
+
+/* subtle interactive lift */
+.activity-card, .cal-month{ transition: box-shadow 0.18s ease, transform 0.18s ease; }
+.activity-card:hover{ box-shadow: 0 4px 10px -4px rgba(43,33,22,0.12), 0 16px 30px -14px rgba(43,33,22,0.2); }
+
+/* ============================================================
    FOOTER
    ============================================================ */
 footer{
@@ -685,20 +966,37 @@ footer{
 <body>
 
 <header class="topnav no-print">
-  <span class="topnav-brand">Gathering in Christ</span>
+  <span class="topnav-brand">Merida YSA Newsroom</span>
   <div class="topnav-actions">
-    <span class="sync-status" id="syncStatus">Connecting…</span>
+    <span class="sync-status" id="syncStatus" aria-live="polite">Connecting…</span>
     <button class="icon-btn" id="refreshBtn" title="Refresh now">
       <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
     </button>
-    <button class="btn btn-outline" id="leaderBtn">Leader access</button>
+    <div class="leader-menu-wrap">
+      <button class="btn btn-outline" id="leaderBtn" aria-haspopup="true" aria-expanded="false">Leader access</button>
+      <div class="leader-dropdown" id="leaderDropdown" role="menu" hidden>
+        <button class="leader-dropdown-item" id="viewKeyBtn" role="menuitem">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8Z"/><circle cx="12" cy="12" r="3"/></svg>
+          View / copy access key
+        </button>
+        <button class="leader-dropdown-item" id="changeKeyBtn" role="menuitem">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+          Change access key
+        </button>
+        <div class="leader-dropdown-divider"></div>
+        <button class="leader-dropdown-item danger" id="logoutBtn" role="menuitem">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+          Log out of leader mode
+        </button>
+      </div>
+    </div>
   </div>
 </header>
 
 <div class="masthead no-print">
   <div class="halo" aria-hidden="true"></div>
   <div class="masthead-inner">
-    <p class="eyebrow">Gathering in Christ &middot; Ormoc Stake YSA</p>
+    <p class="eyebrow">Merida YSA Newsroom &middot; Ormoc Stake YSA</p>
     <h1>The Activity Calendar</h1>
     <p class="subtitle">Every gathering, under one light.</p>
   </div>
@@ -759,6 +1057,8 @@ footer{
 
   <!-- SCHEDULE -->
   <section class="schedule-section">
+    <div class="next-up no-print" id="nextUpBanner" hidden></div>
+
     <div class="schedule-header no-print">
       <div class="view-toggle" role="tablist" aria-label="View mode">
         <button class="toggle-btn" data-view="list" id="btnList">List</button>
@@ -773,7 +1073,13 @@ footer{
       </button>
     </div>
 
-    <div id="emptyState" class="empty-state">
+    <div id="skeletonState" class="skeleton-wrap no-print" hidden>
+      <div class="skeleton-card"></div>
+      <div class="skeleton-card"></div>
+      <div class="skeleton-card"></div>
+    </div>
+
+    <div id="emptyState" class="empty-state" hidden>
       <p class="empty-mark">&#10022;</p>
       <p>No activities scheduled yet.</p>
       <p class="empty-sub">Fill out the form above to add your first one.</p>
@@ -781,7 +1087,7 @@ footer{
 
     <!-- Printable masthead, only visible on paper -->
     <div class="print-only print-masthead">
-      <h1>Gathering in Christ &mdash; Activity Schedule</h1>
+      <h1>Merida YSA Newsroom &mdash; Activity Schedule</h1>
       <p id="printDateRange"></p>
     </div>
 
@@ -790,6 +1096,74 @@ footer{
   </section>
 
 </main>
+
+<div class="modal-overlay no-print" id="leaderModalOverlay" hidden>
+  <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="leaderModalTitle">
+    <p class="modal-eyebrow">Leaders only</p>
+    <h3 id="leaderModalTitle">Leader access</h3>
+    <p class="modal-sub">Enter the access key shared with your leadership team to add or edit activities.</p>
+    <div class="input-with-toggle">
+      <input type="password" id="leaderKeyInput" placeholder="Access key" autocomplete="off">
+      <button type="button" class="input-toggle-btn" data-toggle-for="leaderKeyInput" title="Show key" aria-label="Show key">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8Z"/><circle cx="12" cy="12" r="3"/></svg>
+      </button>
+    </div>
+    <p class="modal-error" id="leaderModalError" hidden>That key didn't work. Check with a leader for the current key.</p>
+    <div class="modal-actions">
+      <button type="button" class="btn btn-ghost" id="leaderModalCancel">Cancel</button>
+      <button type="button" class="btn btn-primary" id="leaderModalSubmit">Unlock</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay no-print" id="changeKeyModalOverlay" hidden>
+  <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="changeKeyModalTitle">
+    <p class="modal-eyebrow">Leaders only</p>
+    <h3 id="changeKeyModalTitle">Change access key</h3>
+    <p class="modal-sub">Set a new key for leader access, then share it with your leadership team — the old key stops working right away.</p>
+    <div class="input-with-toggle">
+      <input type="password" id="newKeyInput" placeholder="New access key (min 4 characters)" autocomplete="off">
+      <button type="button" class="input-toggle-btn" data-toggle-for="newKeyInput" title="Show key" aria-label="Show key">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8Z"/><circle cx="12" cy="12" r="3"/></svg>
+      </button>
+    </div>
+    <div class="input-with-toggle" style="margin-top:0.6rem">
+      <input type="password" id="confirmKeyInput" placeholder="Confirm new access key" autocomplete="off">
+      <button type="button" class="input-toggle-btn" data-toggle-for="confirmKeyInput" title="Show key" aria-label="Show key">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8Z"/><circle cx="12" cy="12" r="3"/></svg>
+      </button>
+    </div>
+    <p class="modal-error" id="changeKeyModalError" hidden>Keys don't match, or the key's too short.</p>
+    <div class="modal-actions">
+      <button type="button" class="btn btn-ghost" id="changeKeyModalCancel">Cancel</button>
+      <button type="button" class="btn btn-primary" id="changeKeyModalSubmit">Save new key</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay no-print" id="viewKeyModalOverlay" hidden>
+  <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="viewKeyModalTitle">
+    <p class="modal-eyebrow">Leaders only</p>
+    <h3 id="viewKeyModalTitle">Current access key</h3>
+    <p class="modal-sub">Share this with leaders who need it. Anyone with this key can add, edit, or delete activities.</p>
+    <div class="key-reveal-row">
+      <code id="viewKeyValue">••••••••</code>
+      <button type="button" class="icon-btn" id="viewKeyToggle" title="Show key" aria-label="Show key">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8Z"/><circle cx="12" cy="12" r="3"/></svg>
+      </button>
+      <button type="button" class="icon-btn" id="viewKeyCopy" title="Copy key" aria-label="Copy key">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+      </button>
+    </div>
+    <p class="modal-error" id="viewKeyModalError" hidden>Couldn't load the current key.</p>
+    <div class="modal-actions">
+      <button type="button" class="btn btn-ghost" id="viewKeyModalClose">Close</button>
+      <button type="button" class="btn btn-primary" id="viewKeyChangeInstead">Change it instead</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast-stack no-print" id="toastStack" aria-live="polite"></div>
 
 <footer class="no-print">
   <p>Saved automatically in this browser &middot; export-friendly for printing &amp; phone calendars</p>
