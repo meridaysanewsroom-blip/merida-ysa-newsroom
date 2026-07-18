@@ -377,7 +377,32 @@
         <span class="text-xs text-parchment-dim">Past gatherings</span>
       </div>
 
-      <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
+      <p x-show="galleryLoadError" class="text-sm mb-4 flex items-center gap-2" style="color:#e0a5ab">
+        <i class="fa-solid fa-triangle-exclamation"></i>
+        Couldn't reach the gallery. <span x-text="galleryLoadError"></span>
+      </p>
+
+      <!-- Skeleton state -->
+      <div x-show="galleryLoading" class="grid grid-cols-1 sm:grid-cols-2 gap-5">
+        <template x-for="n in 4" :key="n">
+          <div class="card rounded-sm overflow-hidden">
+            <div class="skeleton aspect-video"></div>
+            <div class="p-4">
+              <div class="skeleton h-3 w-20 mb-2"></div>
+              <div class="skeleton h-4 w-2/3"></div>
+            </div>
+          </div>
+        </template>
+      </div>
+
+      <!-- Empty state -->
+      <div x-show="!galleryLoading && gallery.length === 0" class="empty-state rounded-sm p-10 text-center">
+        <i class="fa-regular fa-images text-2xl mb-3" style="color:var(--gold)"></i>
+        <p class="font-display text-lg font-bold mb-1">No photos yet</p>
+        <p class="text-sm text-parchment-dim">Check back soon, or ask a leader to add the first one.</p>
+      </div>
+
+      <div x-show="!galleryLoading && gallery.length > 0" class="grid grid-cols-1 sm:grid-cols-2 gap-5">
         <template x-for="(g, i) in gallery" :key="g.id">
           <div class="card rounded-sm overflow-hidden cursor-pointer group"
                :style="`animation: card-in .5s ease both; animation-delay:${i * 60}ms`"
@@ -389,7 +414,7 @@
               </div>
             </div>
             <div class="p-4">
-              <span class="text-xs font-semibold" style="color:var(--gold)" x-text="g.date"></span>
+              <span class="text-xs font-semibold" style="color:var(--gold)" x-text="formatDate(g.date)"></span>
               <h3 class="font-display text-base font-bold mt-1" x-text="g.title"></h3>
               <p class="text-xs text-parchment-dim mt-1 leading-relaxed" x-text="g.description"></p>
             </div>
@@ -404,7 +429,7 @@
           </button>
           <img :src="selectedPhoto?.image" class="w-full max-h-[60vh] object-cover">
           <div class="p-6">
-            <span class="text-xs font-semibold" style="color:var(--gold)" x-text="selectedPhoto?.date"></span>
+            <span class="text-xs font-semibold" style="color:var(--gold)" x-text="selectedPhoto && formatDate(selectedPhoto.date)"></span>
             <h3 class="font-display text-xl font-bold mt-1" x-text="selectedPhoto?.title"></h3>
             <p class="text-sm text-parchment-dim mt-2 leading-relaxed" x-text="selectedPhoto?.description"></p>
           </div>
@@ -435,11 +460,13 @@
 function newsroom(){
   return {
     // ⚠️ SET THIS to your deployed Apps Script Web App URL (see SETUP.md)
-    API_URL: 'https://script.google.com/macros/s/AKfycbxgVt-GaY0WH73o9NyDKmSxY2miMxBEN6L0rCkG5r-fhNkKT6-s8bi2V7D37-weHrVU/exec',
+    API_URL: 'https://script.google.com/macros/s/AKfycbxOfB2qFTk_lYC0x_i-aJVYtXFHalYSBz2Sbq1l8C73u0EipeQ_z9F-fAPJahn4b-2J/exec',
 
     tab: 'calendar',
     loading: true,
     loadError: '',
+    galleryLoading: true,
+    galleryLoadError: '',
     selectedPhoto: null,
     today: new Date().toLocaleDateString(undefined, { weekday:'long', year:'numeric', month:'long', day:'numeric' }),
 
@@ -447,16 +474,13 @@ function newsroom(){
     activeCats: [],
     categories: ['Devotional', 'Fellowship', 'Service', 'Seminar', 'Sports'],
 
+    // Fallback sample data, shown only if the API can't be reached.
     activities: [
       { id: 1, title: 'Come Follow Me: Judges', date: '2026-08-02', time: '6:00 PM', category: 'Devotional', location: 'Merida Chapel', description: 'A YSA discussion on courage and covenant walking through the book of Judges.' },
       { id: 2, title: 'YSA Family Home Evening', date: '2026-08-10', time: '7:00 PM', category: 'Fellowship', location: 'Ormoc Stake Center', description: 'Games, testimonies, and treats to close out the week together.' },
       { id: 3, title: 'Service Project: Brigada', date: '2026-08-22', time: '7:00 AM', category: 'Service', location: 'Merida Community Hall', description: 'Joining the community clean-up and school supply drive.' }
     ],
-    gallery: [
-      { id: 101, title: 'Beach BBQ Fellowship', date: 'May 2026', image: 'https://images.unsplash.com/photo-1533106418989-88406c7cc8ca?auto=format&fit=crop&w=800&q=80', description: 'An afternoon of grilling, games, and gratitude by the shore.' },
-      { id: 102, title: 'Ward Temple Trip', date: 'April 2026', image: 'https://images.unsplash.com/photo-1518481852452-9415b262eba4?auto=format&fit=crop&w=800&q=80', description: 'YSA members traveled together for a session of covenant renewal.' },
-      { id: 103, title: 'Newsroom Launch Night', date: 'March 2026', image: 'https://images.unsplash.com/photo-1529156069898-49953e39b3ac?auto=format&fit=crop&w=800&q=80', description: 'Celebrating the launch of the new digital newsroom hub.' }
-    ],
+    gallery: [],
 
     get visibleActivities(){
       const q = this.query.trim().toLowerCase();
@@ -537,9 +561,12 @@ function newsroom(){
     async init(){
       if(!this.API_URL || this.API_URL.includes('PASTE_YOUR')){
         this.loading = false;
+        this.galleryLoading = false;
         this.loadError = '(Apps Script URL not configured yet.)';
+        this.galleryLoadError = '(Apps Script URL not configured yet.)';
         return;
       }
+
       try{
         const res = await fetch(this.API_URL + '?action=activities');
         const data = await res.json();
@@ -552,6 +579,20 @@ function newsroom(){
         this.loadError = 'Network error.';
       } finally {
         this.loading = false;
+      }
+
+      try{
+        const res = await fetch(this.API_URL + '?action=gallery');
+        const data = await res.json();
+        if(data.success){
+          this.gallery = data.gallery;
+        } else {
+          this.galleryLoadError = data.error || 'Unknown error.';
+        }
+      } catch(err){
+        this.galleryLoadError = 'Network error.';
+      } finally {
+        this.galleryLoading = false;
       }
     }
   }
