@@ -11,783 +11,1342 @@
 <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 <style>
-  @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700;800&family=Inter:wght@400;500;600;700&display=swap');
-  :root{
-    --navy:#0b1730; --navy-2:#132349; --gold:#d4af37; --gold-dark:#8a6d1a; --gold-bright:#f0d377;
-    --parchment:#f4ecd8; --parchment-dim:#c9bd9c; --maroon:#7a2331; --forest:#2f5233; --slate-blue:#2c4270;
-  }
-  [x-cloak]{display:none !important;}
-  body{
-    font-family:'Inter',sans-serif; color:var(--parchment); min-height:100vh;
-    background:
-      radial-gradient(1100px 600px at 50% -10%, rgba(212,175,55,0.10), transparent 60%),
-      radial-gradient(900px 500px at 100% 100%, rgba(44,66,112,0.35), transparent 60%),
-      var(--navy);
-  }
-  .font-display{font-family:'Playfair Display',serif;}
-  .text-parchment-dim{ color:var(--parchment-dim); }
-  .rule-thin{ border-top:1px solid rgba(212,175,55,0.35); }
-  .card{ background:var(--navy-2); border:1px solid rgba(212,175,55,0.18); transition: border-color .3s, transform .2s; }
-  .card:hover{ border-color: rgba(212,175,55,0.4); }
-  .masthead-rule{ position:relative; overflow:hidden; height:3px; background:linear-gradient(90deg, transparent, var(--gold), transparent); }
-  .masthead-rule::after{
-    content:''; position:absolute; top:0; left:-35%; width:35%; height:100%;
-    background:linear-gradient(90deg, transparent, rgba(255,255,255,0.95), transparent);
-    animation: rule-shine 6s ease-in-out infinite;
-  }
-  @keyframes rule-shine{ 0%{left:-35%;} 35%{left:135%;} 100%{left:135%;} }
-
-  a:focus-visible, button:focus-visible, input:focus-visible, textarea:focus-visible, select:focus-visible{
-    outline:2px solid var(--gold); outline-offset:2px; border-radius:2px;
-  }
-
-  .input{
-    width:100%; background:#0b1730; border:1px solid rgba(212,175,55,0.3);
-    color:var(--parchment); border-radius:3px; padding:.7rem 1rem; font-size:.875rem;
-    outline:none; transition: border-color .2s, box-shadow .2s;
-  }
-  .input:focus{ border-color:var(--gold); box-shadow:0 0 0 3px rgba(212,175,55,0.15); }
-  .input::placeholder{ color:rgba(201,189,156,0.5); }
-
-  .file-drop{
-    border:1px dashed rgba(212,175,55,0.4); border-radius:3px; background:rgba(212,175,55,0.03);
-    padding:1rem; text-align:center; cursor:pointer; transition:.2s;
-  }
-  .file-drop:hover{ border-color:var(--gold); background:rgba(212,175,55,0.06); }
-  .file-drop input[type=file]{ display:none; }
-
-  .btn-gold{
-    background:linear-gradient(135deg, var(--gold-bright), var(--gold)); color:var(--navy); font-weight:700; letter-spacing:.02em;
-    padding:.75rem 1.25rem; border-radius:3px; transition:.2s;
-    display:flex; align-items:center; justify-content:center; gap:.4rem;
-  }
-  .btn-gold:hover:not(:disabled){ filter:brightness(1.08); transform:translateY(-1px); }
-  .btn-gold:disabled{ opacity:.6; cursor:not-allowed; }
-  .btn-ghost{
-    background:transparent; color:var(--parchment-dim); border:1px solid rgba(212,175,55,0.3);
-    padding:.75rem 1.25rem; border-radius:3px; transition:.2s;
-  }
-  .btn-ghost:hover{ color:var(--gold); border-color:var(--gold); }
-
-  .skeleton{
-    background:linear-gradient(100deg, rgba(212,175,55,0.06) 30%, rgba(212,175,55,0.16) 50%, rgba(212,175,55,0.06) 70%);
-    background-size:200% 100%; animation: skeleton-move 1.4s ease-in-out infinite; border-radius:3px;
-  }
-  @keyframes skeleton-move{ 0%{background-position:200% 0;} 100%{background-position:-200% 0;} }
-
-  .empty-state{ border:1px dashed rgba(212,175,55,0.35); background:rgba(212,175,55,0.03); }
-
-  .tag{ font-size:.65rem; letter-spacing:.08em; text-transform:uppercase; font-weight:700; color:var(--parchment); padding:.2rem .55rem; border-radius:2px; }
-  .tag-Devotional{ background:var(--maroon); }
-  .tag-Fellowship{ background:var(--slate-blue); }
-  .tag-Service{ background:var(--forest); }
-  .tag-Seminar{ background:var(--gold-dark); color:#1c1a14; }
-  .tag-Sports{ background:#5b3a29; }
-
-  .toast{
-    position:fixed; bottom:1.5rem; left:50%; transform:translateX(-50%);
-    background:var(--navy-2); border:1px solid rgba(212,175,55,0.4); color:var(--parchment);
-    padding:.75rem 1.25rem; border-radius:3px; font-size:.85rem; z-index:60;
-    box-shadow:0 10px 30px -10px rgba(0,0,0,0.6);
-  }
-
-  @keyframes card-in{ from{opacity:0; transform:translateY(8px);} to{opacity:1; transform:translateY(0);} }
-  @media (prefers-reduced-motion: reduce){
-    .masthead-rule::after{ display:none; }
-    [style*="animation: card-in"]{ animation:none !important; opacity:1 !important; transform:none !important; }
-  }
-
-  .input-wrap{ position:relative; }
-  .input-wrap input{ padding-right:2.6rem; }
-  .input-eye{
-    position:absolute; right:.6rem; top:50%; transform:translateY(-50%);
-    background:transparent; border:none; color:var(--parchment-dim); cursor:pointer; padding:.3rem;
-  }
-  .input-eye:hover{ color:var(--gold); }
-
-  .settings-overlay{
-    position:fixed; inset:0; z-index:70; display:flex; align-items:center; justify-content:center; padding:1rem;
-    background:rgba(11,23,48,0.75);
-  }
-  .chip-sm{
-    font-size:.65rem; letter-spacing:.05em; text-transform:uppercase; font-weight:700;
-    padding:.3rem .7rem; border-radius:20px; border:1px solid rgba(212,175,55,0.28);
-    background:rgba(212,175,55,0.05); color:var(--parchment-dim); cursor:pointer; transition:.2s;
-    display:inline-flex; align-items:center; gap:.35rem; white-space:nowrap;
-  }
-  .chip-sm:hover{ border-color:rgba(212,175,55,0.6); color:var(--parchment); }
-  .chip-sm.active{ background:var(--gold); border-color:var(--gold); color:var(--navy); }
-
-  /* Section sub-nav (Activities / Gallery) */
-  .subnav-wrap{
-    position:relative; background:rgba(19,35,73,0.6); border:1px solid rgba(212,175,55,0.18);
-    border-radius:4px; padding:.3rem; display:inline-flex;
-  }
-  .subnav-btn{
-    position:relative; z-index:2; font-weight:600; font-size:.8rem; letter-spacing:.03em;
-    transition: color .25s; padding:.5rem 1.1rem; border-radius:3px;
-  }
-  .subnav-btn.active{ background:linear-gradient(135deg, var(--gold-bright), var(--gold)); color:var(--navy); }
-  .subnav-btn:not(.active){ color:var(--parchment-dim); }
-  .subnav-btn:not(.active):hover{ color:var(--gold); }
-
-  .thumb{
-    width:100%; aspect-ratio:16/9; object-fit:cover; border-radius:3px; border:1px solid rgba(212,175,55,0.25);
-    background:rgba(212,175,55,0.05);
-  }
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700;800&family=Inter:wght@400;500;600;700&display=swap');
+:root{
+--navy:#0b1730; --navy-2:#132349; --gold:#d4af37; --gold-dark:#8a6d1a; --gold-bright:#f0d377;
+--parchment:#f4ecd8; --parchment-dim:#c9bd9c; --maroon:#7a2331; --forest:#2f5233; --slate-blue:#2c4270;
+--ink:#1c1a14;
+}
+[x-cloak]{display:none !important;}
+body{
+font-family:'Inter',sans-serif; color:var(--parchment); min-height:100vh;
+background:
+radial-gradient(1100px 600px at 50% -10%, rgba(212,175,55,0.10), transparent 60%),
+radial-gradient(900px 500px at 100% 100%, rgba(44,66,112,0.35), transparent 60%),
+var(--navy);
+}
+.font-display{font-family:'Playfair Display',serif;}
+.text-parchment-dim{ color:var(--parchment-dim); }
+.rule-thin{ border-top:1px solid rgba(212,175,55,0.35); }
+.card{ background:var(--navy-2); border:1px solid rgba(212,175,55,0.18); transition: border-color .3s, transform .2s; }
+.card:hover{ border-color: rgba(212,175,55,0.4); }
+.masthead-rule{ position:relative; overflow:hidden; height:3px; background:linear-gradient(90deg, transparent, var(--gold), transparent); }
+.masthead-rule::after{
+content:''; position:absolute; top:0; left:-35%; width:35%; height:100%;
+background:linear-gradient(90deg, transparent, rgba(255,255,255,0.95), transparent);
+animation: rule-shine 6s ease-in-out infinite;
+}
+@keyframes rule-shine{ 0%{left:-35%;} 35%{left:135%;} 100%{left:135%;} }
+a:focus-visible, button:focus-visible, input:focus-visible, textarea:focus-visible, select:focus-visible{
+outline:2px solid var(--gold); outline-offset:2px; border-radius:2px;
+}
+.input{
+width:100%; background:#0b1730; border:1px solid rgba(212,175,55,0.3);
+color:var(--parchment); border-radius:3px; padding:.7rem 1rem; font-size:.875rem;
+outline:none; transition: border-color .2s, box-shadow .2s;
+}
+.input:focus{ border-color:var(--gold); box-shadow:0 0 0 3px rgba(212,175,55,0.15); }
+.input::placeholder{ color:rgba(201,189,156,0.5); }
+.file-drop{
+border:1px dashed rgba(212,175,55,0.4); border-radius:3px; background:rgba(212,175,55,0.03);
+padding:1rem; text-align:center; cursor:pointer; transition:.2s;
+}
+.file-drop:hover{ border-color:var(--gold); background:rgba(212,175,55,0.06); }
+.file-drop input[type=file]{ display:none; }
+.btn-gold{
+background:linear-gradient(135deg, var(--gold-bright), var(--gold)); color:var(--navy); font-weight:700; letter-spacing:.02em;
+padding:.75rem 1.25rem; border-radius:3px; transition:.2s;
+display:flex; align-items:center; justify-content:center; gap:.4rem;
+}
+.btn-gold:hover:not(:disabled){ filter:brightness(1.08); transform:translateY(-1px); }
+.btn-gold:disabled{ opacity:.6; cursor:not-allowed; }
+.btn-ghost{
+background:transparent; color:var(--parchment-dim); border:1px solid rgba(212,175,55,0.3);
+padding:.75rem 1.25rem; border-radius:3px; transition:.2s;
+}
+.btn-ghost:hover{ color:var(--gold); border-color:var(--gold); }
+.skeleton{
+background:linear-gradient(100deg, rgba(212,175,55,0.06) 30%, rgba(212,175,55,0.16) 50%, rgba(212,175,55,0.06) 70%);
+background-size:200% 100%; animation: skeleton-move 1.4s ease-in-out infinite; border-radius:3px;
+}
+@keyframes skeleton-move{ 0%{background-position:200% 0;} 100%{background-position:-200% 0;} }
+.empty-state{ border:1px dashed rgba(212,175,55,0.35); background:rgba(212,175,55,0.03); }
+.tag{ font-size:.65rem; letter-spacing:.08em; text-transform:uppercase; font-weight:700; color:var(--parchment); padding:.2rem .55rem; border-radius:2px; }
+/* Categories are free-text now (leader-defined), so colors come from a hash
+   of the name into this fixed palette instead of one class per known name. */
+.tag-c1{ background:var(--maroon); }
+.tag-c2{ background:var(--slate-blue); }
+.tag-c3{ background:var(--forest); }
+.tag-c4{ background:var(--gold-dark); color:var(--ink); }
+.tag-c5{ background:#5b3a29; }
+.toast{
+position:fixed; bottom:1.5rem; left:50%; transform:translateX(-50%);
+background:var(--navy-2); border:1px solid rgba(212,175,55,0.4); color:var(--parchment);
+padding:.75rem 1.25rem; border-radius:3px; font-size:.85rem; z-index:60;
+box-shadow:0 10px 30px -10px rgba(0,0,0,0.6);
+}
+@keyframes card-in{ from{opacity:0; transform:translateY(8px);} to{opacity:1; transform:translateY(0);} }
+@media (prefers-reduced-motion: reduce){
+.masthead-rule::after{ display:none; }
+[style*="animation: card-in"]{ animation:none !important; opacity:1 !important; transform:none !important; }
+}
+.input-wrap{ position:relative; }
+.input-wrap input{ padding-right:2.6rem; }
+.input-eye{
+position:absolute; right:.6rem; top:50%; transform:translateY(-50%);
+background:transparent; border:none; color:var(--parchment-dim); cursor:pointer; padding:.3rem;
+}
+.input-eye:hover{ color:var(--gold); }
+.settings-overlay{
+position:fixed; inset:0; z-index:70; display:flex; align-items:center; justify-content:center; padding:1rem;
+background:rgba(11,23,48,0.75);
+}
+.chip-sm{
+font-size:.65rem; letter-spacing:.05em; text-transform:uppercase; font-weight:700;
+padding:.3rem .7rem; border-radius:20px; border:1px solid rgba(212,175,55,0.28);
+background:rgba(212,175,55,0.05); color:var(--parchment-dim); cursor:pointer; transition:.2s;
+display:inline-flex; align-items:center; gap:.35rem; white-space:nowrap;
+}
+.chip-sm:hover{ border-color:rgba(212,175,55,0.6); color:var(--parchment); }
+.chip-sm.active{ background:var(--gold); border-color:var(--gold); color:var(--navy); }
+/* Section sub-nav (Activities / Gallery / Leaders / Members / FAQs / Come Follow Me) */
+.subnav-wrap{
+position:relative; background:rgba(19,35,73,0.6); border:1px solid rgba(212,175,55,0.18);
+border-radius:4px; padding:.3rem; display:inline-flex; flex-wrap:wrap; gap:.25rem;
+}
+.subnav-btn{
+position:relative; z-index:2; font-weight:600; font-size:.8rem; letter-spacing:.03em;
+transition: color .25s, background .25s; padding:.5rem 1.1rem; border-radius:3px;
+}
+.subnav-btn.active{ background:linear-gradient(135deg, var(--gold-bright), var(--gold)); color:var(--navy); }
+.subnav-btn:not(.active){ color:var(--parchment-dim); }
+.subnav-btn:not(.active):hover{ color:var(--gold); }
+.thumb{
+width:100%; aspect-ratio:16/9; object-fit:cover; border-radius:3px; border:1px solid rgba(212,175,55,0.25);
+background:rgba(212,175,55,0.05);
+}
+.avatar-drop{
+width:5.5rem; height:5.5rem; border-radius:50%; flex:none; overflow:hidden;
+border:1px dashed rgba(212,175,55,0.4); background:rgba(212,175,55,0.03);
+display:flex; align-items:center; justify-content:center; cursor:pointer; transition:.2s;
+}
+.avatar-drop:hover{ border-color:var(--gold); background:rgba(212,175,55,0.06); }
+.avatar-drop img{ width:100%; height:100%; object-fit:cover; }
+.avatar-drop input[type=file]{ display:none; }
+.avatar-thumb{
+width:3.25rem; height:3.25rem; border-radius:50%; object-fit:cover; flex:none;
+border:1px solid rgba(212,175,55,0.3);
+}
+.avatar-thumb-placeholder{
+width:3.25rem; height:3.25rem; border-radius:50%; flex:none; display:flex; align-items:center; justify-content:center;
+border:1px dashed rgba(212,175,55,0.3); color:var(--gold-dark); background:rgba(212,175,55,0.04);
+}
 </style>
 </head>
 <body class="min-h-screen pb-16" x-data="leaderPanel()" x-init="init()" x-cloak>
 
-  <header class="max-w-4xl mx-auto px-6 pt-10 pb-6 text-center">
-    <p class="text-xs tracking-widest uppercase" style="color:var(--gold)">Ormoc Stake &middot; Young Single Adults</p>
-    <div class="masthead-rule my-3"></div>
-    <h1 class="font-display text-3xl sm:text-4xl font-extrabold">Leader Panel</h1>
-    <div class="masthead-rule my-3"></div>
-    <a href="index.html" class="text-xs hover:opacity-80 transition inline-flex items-center gap-1.5" style="color:var(--gold)">
-      <i class="fa-solid fa-arrow-left"></i>Back to Newsroom
-    </a>
-  </header>
+<header class="max-w-4xl mx-auto px-6 pt-10 pb-6 text-center">
+<p class="text-xs tracking-widest uppercase" style="color:var(--gold)">Ormoc Stake &middot; Young Single Adults</p>
+<div class="masthead-rule my-3"></div>
+<h1 class="font-display text-3xl sm:text-4xl font-extrabold">Leader Panel</h1>
+<div class="masthead-rule my-3"></div>
+<a href="index.html" class="text-xs hover:opacity-80 transition inline-flex items-center gap-1.5" style="color:var(--gold)">
+<i class="fa-solid fa-arrow-left"></i>Back to Newsroom
+</a>
+</header>
 
-  <main class="max-w-4xl mx-auto px-6">
+<main class="max-w-4xl mx-auto px-6">
 
-    <!-- LOGIN FORM -->
-    <div x-show="!isLoggedIn" class="max-w-sm mx-auto card p-8 rounded-sm shadow-2xl">
-      <div class="w-12 h-12 rounded-full mx-auto mb-4 flex items-center justify-center" style="background:rgba(212,175,55,0.12); border:1px solid rgba(212,175,55,0.35)">
-        <i class="fa-solid fa-lock" style="color:var(--gold)"></i>
-      </div>
-      <h2 class="font-display text-xl font-bold text-center mb-1">Leader Sign In</h2>
-      <p class="text-xs text-parchment-dim text-center mb-6">Authorized leaders only</p>
+<!-- LOGIN FORM -->
+<div x-show="!isLoggedIn" class="max-w-sm mx-auto card p-8 rounded-sm shadow-2xl">
+<div class="w-12 h-12 rounded-full mx-auto mb-4 flex items-center justify-center" style="background:rgba(212,175,55,0.12); border:1px solid rgba(212,175,55,0.35)">
+<i class="fa-solid fa-lock" style="color:var(--gold)"></i>
+</div>
+<h2 class="font-display text-xl font-bold text-center mb-1">Leader Sign In</h2>
+<p class="text-xs text-parchment-dim text-center mb-6">Authorized leaders only</p>
+<form @submit.prevent="login" class="space-y-4">
+<div>
+<label class="block text-xs uppercase tracking-wider text-parchment-dim mb-1.5">Username</label>
+<input type="text" x-model="loginForm.username" required autocomplete="username" class="input" placeholder="jdoe">
+</div>
+<div>
+<label class="block text-xs uppercase tracking-wider text-parchment-dim mb-1.5">Password</label>
+<div class="input-wrap">
+<input :type="showLoginPw ? 'text' : 'password'" x-model="loginForm.password" required autocomplete="current-password" class="input" placeholder="••••••••">
+<button type="button" class="input-eye" @click="showLoginPw = !showLoginPw" :aria-label="showLoginPw ? 'Hide password' : 'Show password'">
+<i class="fa-solid" :class="showLoginPw ? 'fa-eye-slash' : 'fa-eye'"></i>
+</button>
+</div>
+</div>
+<p x-show="loginError" x-transition class="text-xs flex items-center gap-1.5" style="color:#e0a5ab">
+<i class="fa-solid fa-circle-exclamation"></i><span x-text="loginError"></span>
+</p>
+<button type="submit" :disabled="loggingIn" class="btn-gold w-full text-sm">
+<template x-if="!loggingIn"><span><i class="fa-solid fa-right-to-bracket"></i> Sign In</span></template>
+<template x-if="loggingIn"><span><i class="fa-solid fa-spinner fa-spin"></i> Signing in…</span></template>
+</button>
+</form>
+<p x-show="apiNotConfigured" class="text-xs mt-5 text-center flex items-center justify-center gap-1.5" style="color:#e0a5ab">
+<i class="fa-solid fa-triangle-exclamation"></i> Apps Script URL isn't set yet — edit API_URL near the bottom of this file.
+</p>
+</div>
 
-      <form @submit.prevent="login" class="space-y-4">
-        <div>
-          <label class="block text-xs uppercase tracking-wider text-parchment-dim mb-1.5">Username</label>
-          <input type="text" x-model="loginForm.username" required autocomplete="username" class="input" placeholder="jdoe">
-        </div>
-        <div>
-          <label class="block text-xs uppercase tracking-wider text-parchment-dim mb-1.5">Password</label>
-          <div class="input-wrap">
-            <input :type="showLoginPw ? 'text' : 'password'" x-model="loginForm.password" required autocomplete="current-password" class="input" placeholder="••••••••">
-            <button type="button" class="input-eye" @click="showLoginPw = !showLoginPw" :aria-label="showLoginPw ? 'Hide password' : 'Show password'">
-              <i class="fa-solid" :class="showLoginPw ? 'fa-eye-slash' : 'fa-eye'"></i>
-            </button>
-          </div>
-        </div>
-        <p x-show="loginError" x-transition class="text-xs flex items-center gap-1.5" style="color:#e0a5ab">
-          <i class="fa-solid fa-circle-exclamation"></i><span x-text="loginError"></span>
-        </p>
-        <button type="submit" :disabled="loggingIn" class="btn-gold w-full text-sm">
-          <template x-if="!loggingIn"><span><i class="fa-solid fa-right-to-bracket"></i> Sign In</span></template>
-          <template x-if="loggingIn"><span><i class="fa-solid fa-spinner fa-spin"></i> Signing in…</span></template>
-        </button>
-      </form>
+<!-- PANEL -->
+<div x-show="isLoggedIn" x-cloak>
+<div class="flex justify-between items-center mb-6 rule-thin pb-4">
+<p class="text-sm flex items-center gap-2">
+<span class="w-2 h-2 rounded-full" style="background:#7fd88f"></span>
+Signed in as <span class="font-semibold" style="color:var(--gold)" x-text="leaderName"></span>
+</p>
+<div class="flex gap-2">
+<button @click="openSettings" class="btn-ghost text-xs"><i class="fa-solid fa-key mr-1"></i>Change Password</button>
+<button @click="logout" class="btn-ghost text-xs"><i class="fa-solid fa-right-from-bracket mr-1"></i>Sign Out</button>
+</div>
+</div>
 
-      <p x-show="apiNotConfigured" class="text-xs mt-5 text-center flex items-center justify-center gap-1.5" style="color:#e0a5ab">
-        <i class="fa-solid fa-triangle-exclamation"></i> Apps Script URL isn't set yet — edit API_URL near the bottom of this file.
-      </p>
-    </div>
+<div class="mb-8">
+<div class="subnav-wrap">
+<button class="subnav-btn" :class="section==='activities' && 'active'" @click="section='activities'">
+<i class="fa-solid fa-calendar-day mr-1.5"></i>Activities
+</button>
+<button class="subnav-btn" :class="section==='gallery' && 'active'" @click="section='gallery'">
+<i class="fa-solid fa-images mr-1.5"></i>Gallery
+</button>
+<button class="subnav-btn" :class="section==='leaders' && 'active'" @click="section='leaders'">
+<i class="fa-solid fa-user-tie mr-1.5"></i>Leaders
+</button>
+<button class="subnav-btn" :class="section==='members' && 'active'" @click="section='members'">
+<i class="fa-solid fa-users mr-1.5"></i>Members
+</button>
+<button class="subnav-btn" :class="section==='faqs' && 'active'" @click="section='faqs'">
+<i class="fa-solid fa-circle-question mr-1.5"></i>FAQs
+</button>
+<button class="subnav-btn" :class="section==='cfm' && 'active'" @click="section='cfm'">
+<i class="fa-solid fa-book-bible mr-1.5"></i>Come Follow Me
+</button>
+</div>
+</div>
 
-    <!-- PANEL -->
-    <div x-show="isLoggedIn" x-cloak>
-      <div class="flex justify-between items-center mb-6 rule-thin pb-4">
-        <p class="text-sm flex items-center gap-2">
-          <span class="w-2 h-2 rounded-full" style="background:#7fd88f"></span>
-          Signed in as <span class="font-semibold" style="color:var(--gold)" x-text="leaderName"></span>
-        </p>
-        <div class="flex gap-2">
-          <button @click="openSettings" class="btn-ghost text-xs"><i class="fa-solid fa-key mr-1"></i>Change Password</button>
-          <button @click="logout" class="btn-ghost text-xs"><i class="fa-solid fa-right-from-bracket mr-1"></i>Sign Out</button>
-        </div>
-      </div>
+<!-- ===================== ACTIVITIES SECTION ===================== -->
+<div x-show="section==='activities'" x-cloak>
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+<!-- FORM -->
+<div class="lg:col-span-1 card p-6 rounded-sm h-fit lg:sticky lg:top-6">
+<h3 class="font-display text-lg font-bold mb-4 flex items-center gap-2">
+<i class="fa-solid" :class="isEditing ? 'fa-pen-to-square' : 'fa-circle-plus'" style="color:var(--gold)"></i>
+<span x-text="isEditing ? 'Edit Activity' : 'Schedule New Activity'"></span>
+</h3>
+<form @submit.prevent="saveActivity" class="space-y-4">
+<div>
+<label class="block text-xs uppercase tracking-wider text-parchment-dim mb-1.5">Title</label>
+<input type="text" x-model="form.title" required class="input">
+</div>
+<div class="grid grid-cols-2 gap-3">
+<div>
+<label class="block text-xs uppercase tracking-wider text-parchment-dim mb-1.5">Date</label>
+<input type="date" x-model="form.date" required class="input">
+</div>
+<div>
+<label class="block text-xs uppercase tracking-wider text-parchment-dim mb-1.5">Time</label>
+<input type="text" x-model="form.time" placeholder="6:00 PM" required class="input">
+</div>
+</div>
+<div class="grid grid-cols-2 gap-3">
+<div>
+<label class="block text-xs uppercase tracking-wider text-parchment-dim mb-1.5">Category</label>
+<input type="text" x-model="form.category" list="category-options" placeholder="e.g. Fireside" required class="input">
+<datalist id="category-options">
+<template x-for="cat in categories" :key="cat">
+<option :value="cat"></option>
+</template>
+</datalist>
+<p class="text-[.65rem] text-parchment-dim mt-1">Type your own — not a fixed list. Reuses past entries as suggestions.</p>
+</div>
+<div>
+<label class="block text-xs uppercase tracking-wider text-parchment-dim mb-1.5">Location</label>
+<input type="text" x-model="form.location" required class="input">
+</div>
+</div>
+<div>
+<label class="block text-xs uppercase tracking-wider text-parchment-dim mb-1.5">Description</label>
+<textarea x-model="form.description" rows="3" required class="input resize-none"></textarea>
+</div>
+<p x-show="saveError" x-transition class="text-xs flex items-center gap-1.5" style="color:#e0a5ab">
+<i class="fa-solid fa-circle-exclamation"></i><span x-text="saveError"></span>
+</p>
+<div class="flex gap-2 pt-1">
+<button type="submit" :disabled="saving" class="btn-gold flex-grow text-sm">
+<template x-if="!saving"><span x-text="isEditing ? 'Save Changes' : 'Publish Activity'"></span></template>
+<template x-if="saving"><span><i class="fa-solid fa-spinner fa-spin"></i> Saving…</span></template>
+</button>
+<button type="button" x-show="isEditing" @click="resetForm" class="btn-ghost text-sm">Cancel</button>
+</div>
+</form>
+</div>
 
-      <div class="mb-8">
-        <div class="subnav-wrap">
-          <button class="subnav-btn" :class="section==='activities' && 'active'" @click="section='activities'">
-            <i class="fa-solid fa-calendar-day mr-1.5"></i>Activities
-          </button>
-          <button class="subnav-btn" :class="section==='gallery' && 'active'" @click="section='gallery'">
-            <i class="fa-solid fa-images mr-1.5"></i>Gallery
-          </button>
-        </div>
-      </div>
+<!-- LIST -->
+<div class="lg:col-span-2 space-y-3">
+<div class="flex items-baseline justify-between mb-2">
+<h3 class="font-display text-lg font-bold">Active Activities</h3>
+<span class="text-xs text-parchment-dim" x-text="activities.length + ' total'"></span>
+</div>
+<div class="flex flex-wrap items-center gap-2 mb-1" x-show="!loadingActivities && activities.length > 0">
+<div class="relative flex-1 min-w-[140px] max-w-[220px]">
+<i class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-xs" style="color:var(--parchment-dim)"></i>
+<input type="search" x-model="listQuery" placeholder="Search…" class="input" style="padding-left:2rem" aria-label="Search activities">
+</div>
+<template x-for="cat in categories" :key="cat">
+<button class="chip-sm" :class="listCats.includes(cat) && 'active'" @click="toggleListCat(cat)" x-text="cat"></button>
+</template>
+</div>
+<div x-show="loadingActivities" class="space-y-3">
+<template x-for="n in 3" :key="n">
+<div class="card p-5 rounded-sm">
+<div class="skeleton h-4 w-1/3 mb-3"></div>
+<div class="skeleton h-3 w-2/3"></div>
+</div>
+</template>
+</div>
+<div x-show="!loadingActivities && activities.length === 0" class="empty-state rounded-sm p-10 text-center">
+<i class="fa-regular fa-calendar-plus text-2xl mb-3" style="color:var(--gold)"></i>
+<p class="font-display text-lg font-bold mb-1">No activities yet</p>
+<p class="text-sm text-parchment-dim">Use the form to publish the first one.</p>
+</div>
+<div x-show="!loadingActivities && activities.length > 0 && filteredActivities.length === 0" class="empty-state rounded-sm p-10 text-center">
+<i class="fa-solid fa-filter-circle-xmark text-2xl mb-3" style="color:var(--gold)"></i>
+<p class="font-display text-lg font-bold mb-1">No matches</p>
+<p class="text-sm text-parchment-dim">Try a different search term or category.</p>
+</div>
+<template x-for="(a, i) in filteredActivities" :key="a.id">
+<div class="card p-5 rounded-sm flex flex-col sm:flex-row justify-between gap-4 border-l-4"
+:style="`border-left-color:var(--gold); animation: card-in .4s ease both; animation-delay:${i * 50}ms`">
+<div>
+<div class="flex items-center gap-3 flex-wrap">
+<h4 class="font-display font-bold" x-text="a.title"></h4>
+<span class="tag" :class="tagClass(a.category)" x-text="a.category"></span>
+</div>
+<p class="text-xs text-parchment-dim mt-1.5 flex flex-wrap gap-x-4 gap-y-1">
+<span><i class="fa-regular fa-calendar mr-1" style="color:var(--gold)"></i><span x-text="formatDate(a.date)"></span></span>
+<span><i class="fa-regular fa-clock mr-1" style="color:var(--gold)"></i><span x-text="a.time"></span></span>
+<span><i class="fa-solid fa-location-dot mr-1" style="color:var(--gold)"></i><span x-text="a.location"></span></span>
+</p>
+</div>
+<div class="flex gap-2 shrink-0">
+<button @click="editActivity(a)" class="btn-ghost text-xs px-3 py-1.5"><i class="fa-solid fa-pen mr-1"></i>Edit</button>
+<button @click="deleteActivity(a.id)" class="btn-ghost text-xs px-3 py-1.5" style="color:#e0a5ab"><i class="fa-solid fa-trash-can mr-1"></i>Delete</button>
+</div>
+</div>
+</template>
+</div>
+</div>
+</div>
 
-      <!-- ===================== ACTIVITIES SECTION ===================== -->
-      <div x-show="section==='activities'" x-cloak>
-        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          <!-- FORM -->
-          <div class="lg:col-span-1 card p-6 rounded-sm h-fit lg:sticky lg:top-6">
-            <h3 class="font-display text-lg font-bold mb-4 flex items-center gap-2">
-              <i class="fa-solid" :class="isEditing ? 'fa-pen-to-square' : 'fa-circle-plus'" style="color:var(--gold)"></i>
-              <span x-text="isEditing ? 'Edit Activity' : 'Schedule New Activity'"></span>
-            </h3>
-            <form @submit.prevent="saveActivity" class="space-y-4">
-              <div>
-                <label class="block text-xs uppercase tracking-wider text-parchment-dim mb-1.5">Title</label>
-                <input type="text" x-model="form.title" required class="input">
-              </div>
-              <div class="grid grid-cols-2 gap-3">
-                <div>
-                  <label class="block text-xs uppercase tracking-wider text-parchment-dim mb-1.5">Date</label>
-                  <input type="date" x-model="form.date" required class="input">
-                </div>
-                <div>
-                  <label class="block text-xs uppercase tracking-wider text-parchment-dim mb-1.5">Time</label>
-                  <input type="text" x-model="form.time" placeholder="6:00 PM" required class="input">
-                </div>
-              </div>
-              <div class="grid grid-cols-2 gap-3">
-                <div>
-                  <label class="block text-xs uppercase tracking-wider text-parchment-dim mb-1.5">Category</label>
-                  <select x-model="form.category" class="input">
-                    <option>Devotional</option>
-                    <option>Fellowship</option>
-                    <option>Service</option>
-                    <option>Seminar</option>
-                    <option>Sports</option>
-                  </select>
-                </div>
-                <div>
-                  <label class="block text-xs uppercase tracking-wider text-parchment-dim mb-1.5">Location</label>
-                  <input type="text" x-model="form.location" required class="input">
-                </div>
-              </div>
-              <div>
-                <label class="block text-xs uppercase tracking-wider text-parchment-dim mb-1.5">Description</label>
-                <textarea x-model="form.description" rows="3" required class="input resize-none"></textarea>
-              </div>
-              <p x-show="saveError" x-transition class="text-xs flex items-center gap-1.5" style="color:#e0a5ab">
-                <i class="fa-solid fa-circle-exclamation"></i><span x-text="saveError"></span>
-              </p>
-              <div class="flex gap-2 pt-1">
-                <button type="submit" :disabled="saving" class="btn-gold flex-grow text-sm">
-                  <template x-if="!saving"><span x-text="isEditing ? 'Save Changes' : 'Publish Activity'"></span></template>
-                  <template x-if="saving"><span><i class="fa-solid fa-spinner fa-spin"></i> Saving…</span></template>
-                </button>
-                <button type="button" x-show="isEditing" @click="resetForm" class="btn-ghost text-sm">Cancel</button>
-              </div>
-            </form>
-          </div>
+<!-- ===================== GALLERY SECTION ===================== -->
+<div x-show="section==='gallery'" x-cloak>
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+<!-- FORM -->
+<div class="lg:col-span-1 card p-6 rounded-sm h-fit lg:sticky lg:top-6">
+<h3 class="font-display text-lg font-bold mb-4 flex items-center gap-2">
+<i class="fa-solid" :class="isEditingGallery ? 'fa-pen-to-square' : 'fa-circle-plus'" style="color:var(--gold)"></i>
+<span x-text="isEditingGallery ? 'Edit Photo' : 'Add Gallery Photo'"></span>
+</h3>
+<form @submit.prevent="saveGalleryItem" class="space-y-4">
+<div>
+<label class="block text-xs uppercase tracking-wider text-parchment-dim mb-1.5">Photo</label>
+<label class="file-drop block">
+<input type="file" accept="image/*" @change="onGalleryFileChange">
+<template x-if="!galleryForm.imagePreview">
+<div>
+<i class="fa-solid fa-cloud-arrow-up text-xl mb-1.5" style="color:var(--gold)"></i>
+<p class="text-xs text-parchment-dim">Tap to choose a photo</p>
+</div>
+</template>
+<template x-if="galleryForm.imagePreview">
+<img :src="galleryForm.imagePreview" class="thumb">
+</template>
+</label>
+<p x-show="isEditingGallery && !galleryForm.imagePreview" class="text-[.65rem] text-parchment-dim mt-1">
+Leave blank to keep the current photo.
+</p>
+<p x-show="galleryFileError" class="text-xs mt-1.5 flex items-center gap-1.5" style="color:#e0a5ab">
+<i class="fa-solid fa-circle-exclamation"></i><span x-text="galleryFileError"></span>
+</p>
+</div>
+<div>
+<label class="block text-xs uppercase tracking-wider text-parchment-dim mb-1.5">Title</label>
+<input type="text" x-model="galleryForm.title" required class="input">
+</div>
+<div>
+<label class="block text-xs uppercase tracking-wider text-parchment-dim mb-1.5">Date</label>
+<input type="date" x-model="galleryForm.date" required class="input">
+</div>
+<div>
+<label class="block text-xs uppercase tracking-wider text-parchment-dim mb-1.5">Category <span class="normal-case font-normal text-parchment-dim">(optional)</span></label>
+<input type="text" x-model="galleryForm.category" placeholder='e.g. "Come, Follow Me"' class="input">
+<p class="text-[.65rem] text-parchment-dim mt-1">Type <strong>Come, Follow Me</strong> to show this photo under Come Follow Me &rarr; Class Pictures instead of the general Memory Lane.</p>
+</div>
+<div>
+<label class="block text-xs uppercase tracking-wider text-parchment-dim mb-1.5">Description</label>
+<textarea x-model="galleryForm.description" rows="3" class="input resize-none"></textarea>
+</div>
+<p x-show="galleryError" x-transition class="text-xs flex items-center gap-1.5" style="color:#e0a5ab">
+<i class="fa-solid fa-circle-exclamation"></i><span x-text="galleryError"></span>
+</p>
+<div class="flex gap-2 pt-1">
+<button type="submit" :disabled="savingGallery" class="btn-gold flex-grow text-sm">
+<template x-if="!savingGallery"><span x-text="isEditingGallery ? 'Save Changes' : 'Upload Photo'"></span></template>
+<template x-if="savingGallery"><span><i class="fa-solid fa-spinner fa-spin"></i> Uploading…</span></template>
+</button>
+<button type="button" x-show="isEditingGallery" @click="resetGalleryForm" class="btn-ghost text-sm">Cancel</button>
+</div>
+</form>
+</div>
 
-          <!-- LIST -->
-          <div class="lg:col-span-2 space-y-3">
-            <div class="flex items-baseline justify-between mb-2">
-              <h3 class="font-display text-lg font-bold">Active Activities</h3>
-              <span class="text-xs text-parchment-dim" x-text="activities.length + ' total'"></span>
-            </div>
+<!-- LIST -->
+<div class="lg:col-span-2 space-y-3">
+<div class="flex items-baseline justify-between mb-2">
+<h3 class="font-display text-lg font-bold">Memory Lane Photos</h3>
+<span class="text-xs text-parchment-dim" x-text="gallery.length + ' total'"></span>
+</div>
+<div x-show="loadingGallery" class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+<template x-for="n in 4" :key="n">
+<div class="card p-3 rounded-sm">
+<div class="skeleton aspect-video mb-3"></div>
+<div class="skeleton h-4 w-2/3"></div>
+</div>
+</template>
+</div>
+<div x-show="!loadingGallery && gallery.length === 0" class="empty-state rounded-sm p-10 text-center">
+<i class="fa-regular fa-images text-2xl mb-3" style="color:var(--gold)"></i>
+<p class="font-display text-lg font-bold mb-1">No photos yet</p>
+<p class="text-sm text-parchment-dim">Use the form to upload the first one.</p>
+</div>
+<div x-show="!loadingGallery && gallery.length > 0" class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+<template x-for="(g, i) in gallery" :key="g.id">
+<div class="card p-3 rounded-sm" :style="`animation: card-in .4s ease both; animation-delay:${i * 50}ms`">
+<img :src="g.image" :alt="g.title" class="thumb mb-3" loading="lazy">
+<div class="flex items-center gap-2 flex-wrap">
+<h4 class="font-display font-bold text-sm truncate" x-text="g.title"></h4>
+<span x-show="g.category" class="tag" :class="tagClass(g.category)" x-text="g.category"></span>
+</div>
+<p class="text-xs text-parchment-dim mt-0.5" x-text="formatDate(g.date)"></p>
+<div class="flex gap-2 mt-3">
+<button @click="editGalleryItem(g)" class="btn-ghost text-xs px-3 py-1.5 flex-1"><i class="fa-solid fa-pen mr-1"></i>Edit</button>
+<button @click="deleteGalleryItem(g.id)" class="btn-ghost text-xs px-3 py-1.5 flex-1" style="color:#e0a5ab"><i class="fa-solid fa-trash-can mr-1"></i>Delete</button>
+</div>
+</div>
+</template>
+</div>
+</div>
+</div>
+</div>
 
-            <div class="flex flex-wrap items-center gap-2 mb-1" x-show="!loadingActivities && activities.length > 0">
-              <div class="relative flex-1 min-w-[140px] max-w-[220px]">
-                <i class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-xs" style="color:var(--parchment-dim)"></i>
-                <input type="search" x-model="listQuery" placeholder="Search…" class="input" style="padding-left:2rem" aria-label="Search activities">
-              </div>
-              <template x-for="cat in categories" :key="cat">
-                <button class="chip-sm" :class="listCats.includes(cat) && 'active'" @click="toggleListCat(cat)" x-text="cat"></button>
-              </template>
-            </div>
+<!-- ===================== LEADERS SECTION ===================== -->
+<div x-show="section==='leaders'" x-cloak>
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+<div class="lg:col-span-1 card p-6 rounded-sm h-fit lg:sticky lg:top-6">
+<h3 class="font-display text-lg font-bold mb-4 flex items-center gap-2">
+<i class="fa-solid" :class="isEditingLeader ? 'fa-pen-to-square' : 'fa-circle-plus'" style="color:var(--gold)"></i>
+<span x-text="isEditingLeader ? 'Edit Leader' : 'Add YSA Leader'"></span>
+</h3>
+<form @submit.prevent="saveLeader" class="space-y-4">
+<div class="flex items-center gap-3">
+<label class="avatar-drop">
+<input type="file" accept="image/*" @change="onAvatarFileChange($event, 'leaderForm')">
+<img x-show="leaderForm.imagePreview" :src="leaderForm.imagePreview">
+<i x-show="!leaderForm.imagePreview" class="fa-solid fa-camera" style="color:var(--gold)"></i>
+</label>
+<p class="text-[.65rem] text-parchment-dim">Tap circle to add a photo (optional).<span x-show="isEditingLeader"> Leave blank to keep current photo.</span></p>
+</div>
+<div>
+<label class="block text-xs uppercase tracking-wider text-parchment-dim mb-1.5">Name</label>
+<input type="text" x-model="leaderForm.name" required class="input">
+</div>
+<div>
+<label class="block text-xs uppercase tracking-wider text-parchment-dim mb-1.5">Role</label>
+<input type="text" x-model="leaderForm.role" placeholder="e.g. Class President" class="input">
+</div>
+<div>
+<label class="block text-xs uppercase tracking-wider text-parchment-dim mb-1.5">Bio</label>
+<textarea x-model="leaderForm.bio" rows="3" class="input resize-none"></textarea>
+</div>
+<p x-show="leaderError" x-transition class="text-xs flex items-center gap-1.5" style="color:#e0a5ab">
+<i class="fa-solid fa-circle-exclamation"></i><span x-text="leaderError"></span>
+</p>
+<div class="flex gap-2 pt-1">
+<button type="submit" :disabled="savingLeader" class="btn-gold flex-grow text-sm">
+<template x-if="!savingLeader"><span x-text="isEditingLeader ? 'Save Changes' : 'Add Leader'"></span></template>
+<template x-if="savingLeader"><span><i class="fa-solid fa-spinner fa-spin"></i> Saving…</span></template>
+</button>
+<button type="button" x-show="isEditingLeader" @click="resetLeaderForm" class="btn-ghost text-sm">Cancel</button>
+</div>
+</form>
+</div>
+<div class="lg:col-span-2 space-y-3">
+<div class="flex items-baseline justify-between mb-2">
+<h3 class="font-display text-lg font-bold">YSA Leaders</h3>
+<span class="text-xs text-parchment-dim" x-text="leaders.length + ' total'"></span>
+</div>
+<div x-show="loadingLeaders" class="space-y-3">
+<template x-for="n in 2" :key="n"><div class="card p-5 rounded-sm"><div class="skeleton h-4 w-1/3 mb-3"></div><div class="skeleton h-3 w-2/3"></div></div></template>
+</div>
+<div x-show="!loadingLeaders && leaders.length === 0" class="empty-state rounded-sm p-10 text-center">
+<p class="text-sm text-parchment-dim">No leader profiles yet — use the form to add the first one.</p>
+</div>
+<template x-for="(l, i) in leaders" :key="l.id">
+<div class="card p-4 rounded-sm flex items-center justify-between gap-4" :style="`animation: card-in .4s ease both; animation-delay:${i * 50}ms`">
+<div class="flex items-center gap-3 min-w-0">
+<img x-show="l.image" :src="l.image" class="avatar-thumb">
+<div x-show="!l.image" class="avatar-thumb-placeholder"><i class="fa-solid fa-user"></i></div>
+<div class="min-w-0">
+<h4 class="font-display font-bold truncate" x-text="l.name"></h4>
+<p class="text-xs text-parchment-dim truncate" x-text="l.role"></p>
+</div>
+</div>
+<div class="flex gap-2 shrink-0">
+<button @click="editLeader(l)" class="btn-ghost text-xs px-3 py-1.5"><i class="fa-solid fa-pen mr-1"></i>Edit</button>
+<button @click="deleteLeader(l.id)" class="btn-ghost text-xs px-3 py-1.5" style="color:#e0a5ab"><i class="fa-solid fa-trash-can mr-1"></i>Delete</button>
+</div>
+</div>
+</template>
+</div>
+</div>
+</div>
 
-            <div x-show="loadingActivities" class="space-y-3">
-              <template x-for="n in 3" :key="n">
-                <div class="card p-5 rounded-sm">
-                  <div class="skeleton h-4 w-1/3 mb-3"></div>
-                  <div class="skeleton h-3 w-2/3"></div>
-                </div>
-              </template>
-            </div>
+<!-- ===================== MEMBERS SECTION ===================== -->
+<div x-show="section==='members'" x-cloak>
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+<div class="lg:col-span-1 card p-6 rounded-sm h-fit lg:sticky lg:top-6">
+<h3 class="font-display text-lg font-bold mb-4 flex items-center gap-2">
+<i class="fa-solid" :class="isEditingMember ? 'fa-pen-to-square' : 'fa-circle-plus'" style="color:var(--gold)"></i>
+<span x-text="isEditingMember ? 'Edit Member' : 'Add YSA Member'"></span>
+</h3>
+<p class="text-xs text-parchment-dim mb-4">Every YSA member gets a photo + testimony featured here — not just leaders.</p>
+<form @submit.prevent="saveMember" class="space-y-4">
+<div class="flex items-center gap-3">
+<label class="avatar-drop">
+<input type="file" accept="image/*" @change="onAvatarFileChange($event, 'memberForm')">
+<img x-show="memberForm.imagePreview" :src="memberForm.imagePreview">
+<i x-show="!memberForm.imagePreview" class="fa-solid fa-camera" style="color:var(--gold)"></i>
+</label>
+<p class="text-[.65rem] text-parchment-dim">Tap circle to add a photo.<span x-show="isEditingMember"> Leave blank to keep current photo.</span></p>
+</div>
+<div>
+<label class="block text-xs uppercase tracking-wider text-parchment-dim mb-1.5">Name</label>
+<input type="text" x-model="memberForm.name" required class="input">
+</div>
+<div>
+<label class="block text-xs uppercase tracking-wider text-parchment-dim mb-1.5">Testimony</label>
+<textarea x-model="memberForm.testimony" rows="4" class="input resize-none" placeholder="A short personal testimony"></textarea>
+</div>
+<p x-show="memberError" x-transition class="text-xs flex items-center gap-1.5" style="color:#e0a5ab">
+<i class="fa-solid fa-circle-exclamation"></i><span x-text="memberError"></span>
+</p>
+<div class="flex gap-2 pt-1">
+<button type="submit" :disabled="savingMember" class="btn-gold flex-grow text-sm">
+<template x-if="!savingMember"><span x-text="isEditingMember ? 'Save Changes' : 'Add Member'"></span></template>
+<template x-if="savingMember"><span><i class="fa-solid fa-spinner fa-spin"></i> Saving…</span></template>
+</button>
+<button type="button" x-show="isEditingMember" @click="resetMemberForm" class="btn-ghost text-sm">Cancel</button>
+</div>
+</form>
+</div>
+<div class="lg:col-span-2 space-y-3">
+<div class="flex items-baseline justify-between mb-2">
+<h3 class="font-display text-lg font-bold">Member Directory</h3>
+<span class="text-xs text-parchment-dim" x-text="members.length + ' total'"></span>
+</div>
+<div x-show="loadingMembers" class="space-y-3">
+<template x-for="n in 2" :key="n"><div class="card p-5 rounded-sm"><div class="skeleton h-4 w-1/3 mb-3"></div><div class="skeleton h-3 w-2/3"></div></div></template>
+</div>
+<div x-show="!loadingMembers && members.length === 0" class="empty-state rounded-sm p-10 text-center">
+<p class="text-sm text-parchment-dim">No member profiles yet — use the form to add the first one.</p>
+</div>
+<template x-for="(m, i) in members" :key="m.id">
+<div class="card p-4 rounded-sm flex items-center justify-between gap-4" :style="`animation: card-in .4s ease both; animation-delay:${i * 50}ms`">
+<div class="flex items-center gap-3 min-w-0">
+<img x-show="m.image" :src="m.image" class="avatar-thumb">
+<div x-show="!m.image" class="avatar-thumb-placeholder"><i class="fa-solid fa-user"></i></div>
+<h4 class="font-display font-bold truncate" x-text="m.name"></h4>
+</div>
+<div class="flex gap-2 shrink-0">
+<button @click="editMember(m)" class="btn-ghost text-xs px-3 py-1.5"><i class="fa-solid fa-pen mr-1"></i>Edit</button>
+<button @click="deleteMember(m.id)" class="btn-ghost text-xs px-3 py-1.5" style="color:#e0a5ab"><i class="fa-solid fa-trash-can mr-1"></i>Delete</button>
+</div>
+</div>
+</template>
+</div>
+</div>
+</div>
 
-            <div x-show="!loadingActivities && activities.length === 0" class="empty-state rounded-sm p-10 text-center">
-              <i class="fa-regular fa-calendar-plus text-2xl mb-3" style="color:var(--gold)"></i>
-              <p class="font-display text-lg font-bold mb-1">No activities yet</p>
-              <p class="text-sm text-parchment-dim">Use the form to publish the first one.</p>
-            </div>
-            <div x-show="!loadingActivities && activities.length > 0 && filteredActivities.length === 0" class="empty-state rounded-sm p-10 text-center">
-              <i class="fa-solid fa-filter-circle-xmark text-2xl mb-3" style="color:var(--gold)"></i>
-              <p class="font-display text-lg font-bold mb-1">No matches</p>
-              <p class="text-sm text-parchment-dim">Try a different search term or category.</p>
-            </div>
+<!-- ===================== FAQS SECTION ===================== -->
+<div x-show="section==='faqs'" x-cloak>
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+<div class="lg:col-span-1 card p-6 rounded-sm h-fit lg:sticky lg:top-6">
+<h3 class="font-display text-lg font-bold mb-4 flex items-center gap-2">
+<i class="fa-solid" :class="isEditingFaq ? 'fa-pen-to-square' : 'fa-circle-plus'" style="color:var(--gold)"></i>
+<span x-text="isEditingFaq ? 'Edit FAQ' : 'Add FAQ'"></span>
+</h3>
+<form @submit.prevent="saveFaq" class="space-y-4">
+<div>
+<label class="block text-xs uppercase tracking-wider text-parchment-dim mb-1.5">Question</label>
+<input type="text" x-model="faqForm.question" required class="input">
+</div>
+<div>
+<label class="block text-xs uppercase tracking-wider text-parchment-dim mb-1.5">Answer</label>
+<textarea x-model="faqForm.answer" rows="4" required class="input resize-none"></textarea>
+</div>
+<div>
+<label class="block text-xs uppercase tracking-wider text-parchment-dim mb-1.5">Order <span class="normal-case font-normal text-parchment-dim">(optional, lower shows first)</span></label>
+<input type="number" x-model.number="faqForm.order" class="input">
+</div>
+<p x-show="faqError" x-transition class="text-xs flex items-center gap-1.5" style="color:#e0a5ab">
+<i class="fa-solid fa-circle-exclamation"></i><span x-text="faqError"></span>
+</p>
+<div class="flex gap-2 pt-1">
+<button type="submit" :disabled="savingFaq" class="btn-gold flex-grow text-sm">
+<template x-if="!savingFaq"><span x-text="isEditingFaq ? 'Save Changes' : 'Add FAQ'"></span></template>
+<template x-if="savingFaq"><span><i class="fa-solid fa-spinner fa-spin"></i> Saving…</span></template>
+</button>
+<button type="button" x-show="isEditingFaq" @click="resetFaqForm" class="btn-ghost text-sm">Cancel</button>
+</div>
+</form>
+</div>
+<div class="lg:col-span-2 space-y-3">
+<div class="flex items-baseline justify-between mb-2">
+<h3 class="font-display text-lg font-bold">Published FAQs</h3>
+<span class="text-xs text-parchment-dim" x-text="faqs.length + ' total'"></span>
+</div>
+<div x-show="loadingFaqs" class="space-y-3">
+<template x-for="n in 3" :key="n"><div class="card p-5 rounded-sm"><div class="skeleton h-4 w-1/3 mb-3"></div><div class="skeleton h-3 w-2/3"></div></div></template>
+</div>
+<div x-show="!loadingFaqs && faqs.length === 0" class="empty-state rounded-sm p-10 text-center">
+<p class="text-sm text-parchment-dim">No FAQs yet — use the form to add the first one.</p>
+</div>
+<template x-for="(f, i) in faqs" :key="f.id">
+<div class="card p-5 rounded-sm flex justify-between gap-4" :style="`animation: card-in .4s ease both; animation-delay:${i * 50}ms`">
+<div class="min-w-0">
+<h4 class="font-display font-bold" x-text="f.question"></h4>
+<p class="text-xs text-parchment-dim mt-1.5" x-text="f.answer"></p>
+</div>
+<div class="flex gap-2 shrink-0">
+<button @click="editFaq(f)" class="btn-ghost text-xs px-3 py-1.5"><i class="fa-solid fa-pen mr-1"></i>Edit</button>
+<button @click="deleteFaq(f.id)" class="btn-ghost text-xs px-3 py-1.5" style="color:#e0a5ab"><i class="fa-solid fa-trash-can mr-1"></i>Delete</button>
+</div>
+</div>
+</template>
+</div>
+</div>
+</div>
 
-            <template x-for="(a, i) in filteredActivities" :key="a.id">
-              <div class="card p-5 rounded-sm flex flex-col sm:flex-row justify-between gap-4 border-l-4"
-                   :style="`border-left-color:var(--gold); animation: card-in .4s ease both; animation-delay:${i * 50}ms`">
-                <div>
-                  <div class="flex items-center gap-3 flex-wrap">
-                    <h4 class="font-display font-bold" x-text="a.title"></h4>
-                    <span class="tag" :class="'tag-' + a.category" x-text="a.category"></span>
-                  </div>
-                  <p class="text-xs text-parchment-dim mt-1.5 flex flex-wrap gap-x-4 gap-y-1">
-                    <span><i class="fa-regular fa-calendar mr-1" style="color:var(--gold)"></i><span x-text="formatDate(a.date)"></span></span>
-                    <span><i class="fa-regular fa-clock mr-1" style="color:var(--gold)"></i><span x-text="a.time"></span></span>
-                    <span><i class="fa-solid fa-location-dot mr-1" style="color:var(--gold)"></i><span x-text="a.location"></span></span>
-                  </p>
-                </div>
-                <div class="flex gap-2 shrink-0">
-                  <button @click="editActivity(a)" class="btn-ghost text-xs px-3 py-1.5"><i class="fa-solid fa-pen mr-1"></i>Edit</button>
-                  <button @click="deleteActivity(a.id)" class="btn-ghost text-xs px-3 py-1.5" style="color:#e0a5ab"><i class="fa-solid fa-trash-can mr-1"></i>Delete</button>
-                </div>
-              </div>
-            </template>
-          </div>
-        </div>
-      </div>
+<!-- ===================== COME FOLLOW ME SECTION ===================== -->
+<div x-show="section==='cfm'" x-cloak>
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+<div class="lg:col-span-1 card p-6 rounded-sm h-fit lg:sticky lg:top-6">
+<h3 class="font-display text-lg font-bold mb-4 flex items-center gap-2">
+<i class="fa-solid" :class="isEditingSession ? 'fa-pen-to-square' : 'fa-circle-plus'" style="color:var(--gold)"></i>
+<span x-text="isEditingSession ? 'Edit Session' : 'Add Facilitator Session'"></span>
+</h3>
+<p class="text-xs text-parchment-dim mb-4">For photos from class, add them under Gallery and tag the category "Come, Follow Me".</p>
+<form @submit.prevent="saveSession" class="space-y-4">
+<div>
+<label class="block text-xs uppercase tracking-wider text-parchment-dim mb-1.5">Date</label>
+<input type="date" x-model="sessionForm.date" required class="input">
+</div>
+<div>
+<label class="block text-xs uppercase tracking-wider text-parchment-dim mb-1.5">Facilitator</label>
+<input type="text" x-model="sessionForm.facilitator" required class="input">
+</div>
+<div>
+<label class="block text-xs uppercase tracking-wider text-parchment-dim mb-1.5">Topic</label>
+<input type="text" x-model="sessionForm.topic" placeholder="e.g. Judges 6-8" class="input">
+</div>
+<p x-show="sessionError" x-transition class="text-xs flex items-center gap-1.5" style="color:#e0a5ab">
+<i class="fa-solid fa-circle-exclamation"></i><span x-text="sessionError"></span>
+</p>
+<div class="flex gap-2 pt-1">
+<button type="submit" :disabled="savingSession" class="btn-gold flex-grow text-sm">
+<template x-if="!savingSession"><span x-text="isEditingSession ? 'Save Changes' : 'Add Session'"></span></template>
+<template x-if="savingSession"><span><i class="fa-solid fa-spinner fa-spin"></i> Saving…</span></template>
+</button>
+<button type="button" x-show="isEditingSession" @click="resetSessionForm" class="btn-ghost text-sm">Cancel</button>
+</div>
+</form>
+</div>
+<div class="lg:col-span-2 space-y-3">
+<div class="flex items-baseline justify-between mb-2">
+<h3 class="font-display text-lg font-bold">Facilitator Schedule</h3>
+<span class="text-xs text-parchment-dim" x-text="classSchedule.length + ' total'"></span>
+</div>
+<div x-show="loadingSchedule" class="space-y-3">
+<template x-for="n in 3" :key="n"><div class="card p-5 rounded-sm"><div class="skeleton h-4 w-1/3 mb-3"></div><div class="skeleton h-3 w-2/3"></div></div></template>
+</div>
+<div x-show="!loadingSchedule && classSchedule.length === 0" class="empty-state rounded-sm p-10 text-center">
+<p class="text-sm text-parchment-dim">No sessions yet — use the form to add the first one.</p>
+</div>
+<template x-for="(s, i) in classSchedule" :key="s.id">
+<div class="card p-5 rounded-sm flex justify-between gap-4" :style="`animation: card-in .4s ease both; animation-delay:${i * 50}ms`">
+<div class="min-w-0">
+<h4 class="font-display font-bold" x-text="formatDate(s.date)"></h4>
+<p class="text-xs text-parchment-dim mt-1">Facilitator: <span x-text="s.facilitator"></span></p>
+<p class="text-xs text-parchment-dim" x-show="s.topic">Topic: <span x-text="s.topic"></span></p>
+</div>
+<div class="flex gap-2 shrink-0">
+<button @click="editSession(s)" class="btn-ghost text-xs px-3 py-1.5"><i class="fa-solid fa-pen mr-1"></i>Edit</button>
+<button @click="deleteSession(s.id)" class="btn-ghost text-xs px-3 py-1.5" style="color:#e0a5ab"><i class="fa-solid fa-trash-can mr-1"></i>Delete</button>
+</div>
+</div>
+</template>
+</div>
+</div>
+</div>
 
-      <!-- ===================== GALLERY SECTION ===================== -->
-      <div x-show="section==='gallery'" x-cloak>
-        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          <!-- FORM -->
-          <div class="lg:col-span-1 card p-6 rounded-sm h-fit lg:sticky lg:top-6">
-            <h3 class="font-display text-lg font-bold mb-4 flex items-center gap-2">
-              <i class="fa-solid" :class="isEditingGallery ? 'fa-pen-to-square' : 'fa-circle-plus'" style="color:var(--gold)"></i>
-              <span x-text="isEditingGallery ? 'Edit Photo' : 'Add Gallery Photo'"></span>
-            </h3>
-            <form @submit.prevent="saveGalleryItem" class="space-y-4">
-              <div>
-                <label class="block text-xs uppercase tracking-wider text-parchment-dim mb-1.5">Photo</label>
-                <label class="file-drop block">
-                  <input type="file" accept="image/*" @change="onGalleryFileChange">
-                  <template x-if="!galleryForm.imagePreview">
-                    <div>
-                      <i class="fa-solid fa-cloud-arrow-up text-xl mb-1.5" style="color:var(--gold)"></i>
-                      <p class="text-xs text-parchment-dim">Tap to choose a photo</p>
-                    </div>
-                  </template>
-                  <template x-if="galleryForm.imagePreview">
-                    <img :src="galleryForm.imagePreview" class="thumb">
-                  </template>
-                </label>
-                <p x-show="isEditingGallery && !galleryForm.imagePreview" class="text-[.65rem] text-parchment-dim mt-1">
-                  Leave blank to keep the current photo.
-                </p>
-                <p x-show="galleryFileError" class="text-xs mt-1.5 flex items-center gap-1.5" style="color:#e0a5ab">
-                  <i class="fa-solid fa-circle-exclamation"></i><span x-text="galleryFileError"></span>
-                </p>
-              </div>
-              <div>
-                <label class="block text-xs uppercase tracking-wider text-parchment-dim mb-1.5">Title</label>
-                <input type="text" x-model="galleryForm.title" required class="input">
-              </div>
-              <div>
-                <label class="block text-xs uppercase tracking-wider text-parchment-dim mb-1.5">Date</label>
-                <input type="date" x-model="galleryForm.date" required class="input">
-              </div>
-              <div>
-                <label class="block text-xs uppercase tracking-wider text-parchment-dim mb-1.5">Description</label>
-                <textarea x-model="galleryForm.description" rows="3" class="input resize-none"></textarea>
-              </div>
-              <p x-show="galleryError" x-transition class="text-xs flex items-center gap-1.5" style="color:#e0a5ab">
-                <i class="fa-solid fa-circle-exclamation"></i><span x-text="galleryError"></span>
-              </p>
-              <div class="flex gap-2 pt-1">
-                <button type="submit" :disabled="savingGallery" class="btn-gold flex-grow text-sm">
-                  <template x-if="!savingGallery"><span x-text="isEditingGallery ? 'Save Changes' : 'Upload Photo'"></span></template>
-                  <template x-if="savingGallery"><span><i class="fa-solid fa-spinner fa-spin"></i> Uploading…</span></template>
-                </button>
-                <button type="button" x-show="isEditingGallery" @click="resetGalleryForm" class="btn-ghost text-sm">Cancel</button>
-              </div>
-            </form>
-          </div>
+</div>
+</main>
 
-          <!-- LIST -->
-          <div class="lg:col-span-2 space-y-3">
-            <div class="flex items-baseline justify-between mb-2">
-              <h3 class="font-display text-lg font-bold">Memory Lane Photos</h3>
-              <span class="text-xs text-parchment-dim" x-text="gallery.length + ' total'"></span>
-            </div>
+<!-- SETTINGS MODAL -->
+<div x-show="settingsOpen" x-transition class="settings-overlay" @keydown.escape.window="settingsOpen=false" x-cloak>
+<div @click.away="settingsOpen=false" class="card max-w-sm w-full rounded-sm p-7" x-transition.scale.origin.center>
+<h3 class="font-display text-lg font-bold mb-1 flex items-center gap-2"><i class="fa-solid fa-key" style="color:var(--gold)"></i>Change Password</h3>
+<p class="text-xs text-parchment-dim mb-5">Update your own leader account password.</p>
+<form @submit.prevent="submitPasswordChange" class="space-y-4">
+<div>
+<label class="block text-xs uppercase tracking-wider text-parchment-dim mb-1.5">Current Password</label>
+<div class="input-wrap">
+<input :type="showPw1 ? 'text' : 'password'" x-model="pwForm.currentPassword" required class="input" autocomplete="current-password">
+<button type="button" class="input-eye" @click="showPw1 = !showPw1" :aria-label="showPw1 ? 'Hide password' : 'Show password'"><i class="fa-solid" :class="showPw1 ? 'fa-eye-slash' : 'fa-eye'"></i></button>
+</div>
+</div>
+<div>
+<label class="block text-xs uppercase tracking-wider text-parchment-dim mb-1.5">New Password</label>
+<div class="input-wrap">
+<input :type="showPw2 ? 'text' : 'password'" x-model="pwForm.newPassword" required minlength="6" class="input" autocomplete="new-password">
+<button type="button" class="input-eye" @click="showPw2 = !showPw2" :aria-label="showPw2 ? 'Hide password' : 'Show password'"><i class="fa-solid" :class="showPw2 ? 'fa-eye-slash' : 'fa-eye'"></i></button>
+</div>
+<p class="text-[.65rem] text-parchment-dim mt-1">At least 6 characters.</p>
+</div>
+<div>
+<label class="block text-xs uppercase tracking-wider text-parchment-dim mb-1.5">Confirm New Password</label>
+<input :type="showPw2 ? 'text' : 'password'" x-model="pwForm.confirmPassword" required class="input">
+</div>
+<p x-show="pwError" x-transition class="text-xs flex items-center gap-1.5" style="color:#e0a5ab">
+<i class="fa-solid fa-circle-exclamation"></i><span x-text="pwError"></span>
+</p>
+<div class="flex gap-2 pt-1">
+<button type="submit" :disabled="changingPw" class="btn-gold flex-grow text-sm">
+<template x-if="!changingPw"><span>Update Password</span></template>
+<template x-if="changingPw"><span><i class="fa-solid fa-spinner fa-spin"></i> Saving…</span></template>
+</button>
+<button type="button" @click="settingsOpen=false" class="btn-ghost text-sm">Cancel</button>
+</div>
+</form>
+</div>
+</div>
 
-            <div x-show="loadingGallery" class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <template x-for="n in 4" :key="n">
-                <div class="card p-3 rounded-sm">
-                  <div class="skeleton aspect-video mb-3"></div>
-                  <div class="skeleton h-4 w-2/3"></div>
-                </div>
-              </template>
-            </div>
-
-            <div x-show="!loadingGallery && gallery.length === 0" class="empty-state rounded-sm p-10 text-center">
-              <i class="fa-regular fa-images text-2xl mb-3" style="color:var(--gold)"></i>
-              <p class="font-display text-lg font-bold mb-1">No photos yet</p>
-              <p class="text-sm text-parchment-dim">Use the form to upload the first one.</p>
-            </div>
-
-            <div x-show="!loadingGallery && gallery.length > 0" class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <template x-for="(g, i) in gallery" :key="g.id">
-                <div class="card p-3 rounded-sm" :style="`animation: card-in .4s ease both; animation-delay:${i * 50}ms`">
-                  <img :src="g.image" :alt="g.title" class="thumb mb-3" loading="lazy">
-                  <h4 class="font-display font-bold text-sm truncate" x-text="g.title"></h4>
-                  <p class="text-xs text-parchment-dim mt-0.5" x-text="formatDate(g.date)"></p>
-                  <div class="flex gap-2 mt-3">
-                    <button @click="editGalleryItem(g)" class="btn-ghost text-xs px-3 py-1.5 flex-1"><i class="fa-solid fa-pen mr-1"></i>Edit</button>
-                    <button @click="deleteGalleryItem(g.id)" class="btn-ghost text-xs px-3 py-1.5 flex-1" style="color:#e0a5ab"><i class="fa-solid fa-trash-can mr-1"></i>Delete</button>
-                  </div>
-                </div>
-              </template>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-
-  </main>
-
-  <!-- SETTINGS MODAL -->
-  <div x-show="settingsOpen" x-transition class="settings-overlay" @keydown.escape.window="settingsOpen=false" x-cloak>
-    <div @click.away="settingsOpen=false" class="card max-w-sm w-full rounded-sm p-7" x-transition.scale.origin.center>
-      <h3 class="font-display text-lg font-bold mb-1 flex items-center gap-2"><i class="fa-solid fa-key" style="color:var(--gold)"></i>Change Password</h3>
-      <p class="text-xs text-parchment-dim mb-5">Update your own leader account password.</p>
-      <form @submit.prevent="submitPasswordChange" class="space-y-4">
-        <div>
-          <label class="block text-xs uppercase tracking-wider text-parchment-dim mb-1.5">Current Password</label>
-          <div class="input-wrap">
-            <input :type="showPw1 ? 'text' : 'password'" x-model="pwForm.currentPassword" required class="input" autocomplete="current-password">
-            <button type="button" class="input-eye" @click="showPw1 = !showPw1" :aria-label="showPw1 ? 'Hide password' : 'Show password'"><i class="fa-solid" :class="showPw1 ? 'fa-eye-slash' : 'fa-eye'"></i></button>
-          </div>
-        </div>
-        <div>
-          <label class="block text-xs uppercase tracking-wider text-parchment-dim mb-1.5">New Password</label>
-          <div class="input-wrap">
-            <input :type="showPw2 ? 'text' : 'password'" x-model="pwForm.newPassword" required minlength="6" class="input" autocomplete="new-password">
-            <button type="button" class="input-eye" @click="showPw2 = !showPw2" :aria-label="showPw2 ? 'Hide password' : 'Show password'"><i class="fa-solid" :class="showPw2 ? 'fa-eye-slash' : 'fa-eye'"></i></button>
-          </div>
-          <p class="text-[.65rem] text-parchment-dim mt-1">At least 6 characters.</p>
-        </div>
-        <div>
-          <label class="block text-xs uppercase tracking-wider text-parchment-dim mb-1.5">Confirm New Password</label>
-          <input :type="showPw2 ? 'text' : 'password'" x-model="pwForm.confirmPassword" required class="input">
-        </div>
-        <p x-show="pwError" x-transition class="text-xs flex items-center gap-1.5" style="color:#e0a5ab">
-          <i class="fa-solid fa-circle-exclamation"></i><span x-text="pwError"></span>
-        </p>
-        <div class="flex gap-2 pt-1">
-          <button type="submit" :disabled="changingPw" class="btn-gold flex-grow text-sm">
-            <template x-if="!changingPw"><span>Update Password</span></template>
-            <template x-if="changingPw"><span><i class="fa-solid fa-spinner fa-spin"></i> Saving…</span></template>
-          </button>
-          <button type="button" @click="settingsOpen=false" class="btn-ghost text-sm">Cancel</button>
-        </div>
-      </form>
-    </div>
-  </div>
-
-  <!-- TOAST -->
-  <div x-show="toast" x-transition class="toast" x-text="toast"></div>
+<!-- TOAST -->
+<div x-show="toast" x-transition class="toast" x-text="toast"></div>
 
 <script>
 function leaderPanel(){
-  return {
-    // ⚠️ Must match the same Apps Script Web App URL used in index.html
-    API_URL: 'https://script.google.com/macros/s/AKfycbxOrMzBWUQPJYsrzCTHtvG93k6qCQq63tRk_Hmk2Vbz7kLtLAcua9GMcQ9ESfOKVfV2/exec',
-    apiNotConfigured: false,
+return {
+// ⚠️ Must match the same Apps Script Web App URL used in index.html
+API_URL: 'https://script.google.com/macros/s/AKfycbxOrMzBWUQPJYsrzCTHtvG93k6qCQq63tRk_Hmk2Vbz7kLtLAcua9GMcQ9ESfOKVfV2/exec',
+apiNotConfigured: false,
+section: 'activities', // 'activities' | 'gallery' | 'leaders' | 'members' | 'faqs' | 'cfm'
+isLoggedIn: false,
+leaderName: '',
+token: null,
+loginForm: { username:'', password:'' },
+loginError: '',
+loggingIn: false,
+showLoginPw: false,
 
-    section: 'activities', // 'activities' | 'gallery'
+// Deterministic color for a free-text category name (same palette used on the public site).
+tagClass(cat){
+  const palette = ['tag-c1', 'tag-c2', 'tag-c3', 'tag-c4', 'tag-c5'];
+  const s = String(cat || '');
+  let hash = 0;
+  for (let i = 0; i < s.length; i++) hash = (hash * 31 + s.charCodeAt(i)) >>> 0;
+  return palette[hash % palette.length];
+},
 
-    isLoggedIn: false,
-    leaderName: '',
-    token: null,
-    loginForm: { username:'', password:'' },
-    loginError: '',
-    loggingIn: false,
-    showLoginPw: false,
+// Shared avatar-photo file handler for Leaders + Members forms.
+onAvatarFileChange(e, formKey){
+  const form = this[formKey];
+  const file = e.target.files && e.target.files[0];
+  if (!file) return;
+  if (!file.type.startsWith('image/')) { return; }
+  const MAX_BYTES = 8 * 1024 * 1024;
+  if (file.size > MAX_BYTES) { return; }
+  const reader = new FileReader();
+  reader.onload = () => {
+    const result = reader.result;
+    const commaIdx = result.indexOf(',');
+    form.imageBase64 = result.slice(commaIdx + 1);
+    form.imageMimeType = file.type;
+    form.imagePreview = result;
+  };
+  reader.readAsDataURL(file);
+},
 
-    // ---------- Activities ----------
-    activities: [],
-    loadingActivities: false,
-    isEditing: false,
-    editId: null,
-    saving: false,
-    saveError: '',
-    form: { title:'', date:'', time:'', category:'Devotional', location:'', description:'' },
+// ---------- Activities ----------
+activities: [],
+loadingActivities: false,
+isEditing: false,
+editId: null,
+saving: false,
+saveError: '',
+form: { title:'', date:'', time:'', category:'', location:'', description:'' },
+// Categories are now free-text (leaders type their own label). The list here
+// is derived from whatever's already in use, purely to power the datalist
+// autocomplete and the filter chips — it's no longer a fixed set of options.
+get categories(){
+  return [...new Set(this.activities.map(a => a.category).filter(Boolean))].sort();
+},
+listQuery: '',
+listCats: [],
+toggleListCat(cat){
+  const idx = this.listCats.indexOf(cat);
+  idx === -1 ? this.listCats.push(cat) : this.listCats.splice(idx, 1);
+},
+get filteredActivities(){
+  const q = this.listQuery.trim().toLowerCase();
+  return this.activities
+    .filter(a => !this.listCats.length || this.listCats.includes(a.category))
+    .filter(a => !q || [a.title, a.location, a.description].filter(Boolean).join(' ').toLowerCase().includes(q))
+    .slice()
+    .sort((x, y) => String(x.date).localeCompare(String(y.date)));
+},
 
-    categories: ['Devotional', 'Fellowship', 'Service', 'Seminar', 'Sports'],
-    listQuery: '',
-    listCats: [],
-    toggleListCat(cat){
-      const idx = this.listCats.indexOf(cat);
-      idx === -1 ? this.listCats.push(cat) : this.listCats.splice(idx, 1);
-    },
-    get filteredActivities(){
-      const q = this.listQuery.trim().toLowerCase();
-      return this.activities
-        .filter(a => !this.listCats.length || this.listCats.includes(a.category))
-        .filter(a => !q || [a.title, a.location, a.description].filter(Boolean).join(' ').toLowerCase().includes(q))
-        .slice()
-        .sort((x, y) => String(x.date).localeCompare(String(y.date)));
-    },
-
-    // ---------- Gallery ----------
-    gallery: [],
-    loadingGallery: false,
-    isEditingGallery: false,
-    editGalleryId: null,
-    savingGallery: false,
-    galleryError: '',
-    galleryFileError: '',
-    galleryForm: { title:'', date:'', description:'', imageBase64:null, imageMimeType:null, imagePreview:null },
-
-    onGalleryFileChange(e){
-      this.galleryFileError = '';
-      const file = e.target.files && e.target.files[0];
-      if (!file) return;
-      if (!file.type.startsWith('image/')) {
-        this.galleryFileError = 'Please choose an image file.';
-        e.target.value = '';
-        return;
-      }
-      const MAX_BYTES = 8 * 1024 * 1024; // 8MB
-      if (file.size > MAX_BYTES) {
-        this.galleryFileError = 'Photo is too large — please choose one under 8MB.';
-        e.target.value = '';
-        return;
-      }
-      const reader = new FileReader();
-      reader.onload = () => {
-        const result = reader.result; // data:image/jpeg;base64,AAAA...
-        const commaIdx = result.indexOf(',');
-        this.galleryForm.imageBase64 = result.slice(commaIdx + 1);
-        this.galleryForm.imageMimeType = file.type;
-        this.galleryForm.imagePreview = result;
-      };
-      reader.onerror = () => {
-        this.galleryFileError = 'Could not read that file — please try again.';
-      };
-      reader.readAsDataURL(file);
-    },
-
-    resetGalleryForm(){
-      this.galleryForm = { title:'', date:'', description:'', imageBase64:null, imageMimeType:null, imagePreview:null };
-      this.isEditingGallery = false; this.editGalleryId = null; this.galleryError = ''; this.galleryFileError = '';
-    },
-
-    editGalleryItem(g){
-      this.isEditingGallery = true;
-      this.editGalleryId = g.id;
-      this.galleryForm = {
-        title: g.title, date: g.date, description: g.description,
-        imageBase64: null, imageMimeType: null, imagePreview: null
-      };
-      this.galleryError = ''; this.galleryFileError = '';
-      window.scrollTo({ top: 0, behavior:'smooth' });
-    },
-
-    async saveGalleryItem(){
-      this.galleryError = '';
-      if (!this.isEditingGallery && !this.galleryForm.imageBase64) {
-        this.galleryError = 'Please choose a photo to upload.';
-        return;
-      }
-      this.savingGallery = true;
-      try{
-        const payload = {
-          title: this.galleryForm.title,
-          date: this.galleryForm.date,
-          description: this.galleryForm.description
-        };
-        if (this.galleryForm.imageBase64) {
-          payload.imageBase64 = this.galleryForm.imageBase64;
-          payload.imageMimeType = this.galleryForm.imageMimeType;
-        }
-        let data;
-        if (this.isEditingGallery) {
-          data = await this.callApi({ action:'updateGalleryItem', token:this.token, id:this.editGalleryId, gallery: payload });
-        } else {
-          data = await this.callApi({ action:'addGalleryItem', token:this.token, gallery: payload });
-        }
-        if (data.success) {
-          await this.fetchGallery();
-          this.showToast(this.isEditingGallery ? 'Photo updated.' : 'Photo uploaded.');
-          this.resetGalleryForm();
-        } else {
-          this.galleryError = data.error || 'Could not save. Try signing in again.';
-          if (data.error && data.error.includes('Session expired')) this.logout();
-        }
-      } catch(err){
-        this.galleryError = 'Network error — try again.';
-      } finally {
-        this.savingGallery = false;
-      }
-    },
-
-    async deleteGalleryItem(id){
-      if(!confirm('Delete this photo?')) return;
-      const data = await this.callApi({ action:'deleteGalleryItem', token:this.token, id });
-      if(data.success){
-        this.gallery = this.gallery.filter(g => g.id !== id);
-        this.showToast('Photo deleted.');
-      } else if(data.error && data.error.includes('Session expired')){
-        this.logout();
-      }
-    },
-
-    async fetchGallery(){
-      this.loadingGallery = true;
-      try{
-        const res = await fetch(this.API_URL + '?action=gallery');
-        const data = await res.json();
-        if(data.success) this.gallery = data.gallery;
-      } catch(e){}
-      this.loadingGallery = false;
-    },
-
-    // ---------- Password change ----------
-    settingsOpen: false,
-    showPw1: false, showPw2: false,
-    pwForm: { currentPassword:'', newPassword:'', confirmPassword:'' },
-    pwError: '',
-    changingPw: false,
-    openSettings(){
-      this.pwForm = { currentPassword:'', newPassword:'', confirmPassword:'' };
-      this.pwError = '';
-      this.showPw1 = false; this.showPw2 = false;
-      this.settingsOpen = true;
-    },
-    async submitPasswordChange(){
-      this.pwError = '';
-      if (this.pwForm.newPassword !== this.pwForm.confirmPassword) {
-        this.pwError = 'New password and confirmation don\u2019t match.';
-        return;
-      }
-      this.changingPw = true;
-      try{
-        const data = await this.callApi({
-          action:'changePassword', token:this.token,
-          currentPassword:this.pwForm.currentPassword, newPassword:this.pwForm.newPassword
-        });
-        if(data.success){
-          this.settingsOpen = false;
-          this.showToast('Password updated.');
-        } else {
-          this.pwError = data.error || 'Could not update password.';
-          if(data.error && data.error.includes('Session expired')) this.logout();
-        }
-      } catch(err){
-        this.pwError = 'Network error — try again.';
-      } finally {
-        this.changingPw = false;
-      }
-    },
-
-    // ---------- Toast ----------
-    toast: '',
-    _toastTimer: null,
-    showToast(msg){
-      this.toast = msg;
-      clearTimeout(this._toastTimer);
-      this._toastTimer = setTimeout(() => this.toast = '', 2500);
-    },
-
-    // ---------- Lifecycle ----------
-    init(){
-      if(!this.API_URL || this.API_URL.includes('PASTE_YOUR')){
-        this.apiNotConfigured = true;
-      }
-      const saved = sessionStorage.getItem('merida_leader_session');
-      if(saved){
-        try{
-          const s = JSON.parse(saved);
-          this.token = s.token; this.leaderName = s.name; this.isLoggedIn = true;
-          this.fetchActivities();
-          this.fetchGallery();
-        } catch(e){}
-      }
-    },
-
-    formatDate(dateString){
-      const options = { year:'numeric', month:'long', day:'numeric' };
-      const [y,m,d] = String(dateString).split('-').map(Number);
-      if(!y||!m||!d) return dateString;
-      return new Date(y, m-1, d).toLocaleDateString(undefined, options);
-    },
-
-    async callApi(payload){
-      const res = await fetch(this.API_URL, {
-        method: 'POST',
-        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-        body: JSON.stringify(payload)
-      });
-      return res.json();
-    },
-
-    async login(){
-      this.loginError = ''; this.loggingIn = true;
-      try{
-        const data = await this.callApi({ action:'login', username:this.loginForm.username, password:this.loginForm.password });
-        if(data.success){
-          this.token = data.token; this.leaderName = data.name; this.isLoggedIn = true;
-          sessionStorage.setItem('merida_leader_session', JSON.stringify({ token:data.token, name:data.name }));
-          this.loginForm = { username:'', password:'' };
-          this.fetchActivities();
-          this.fetchGallery();
-          this.showToast('Welcome back, ' + data.name + '.');
-        } else {
-          this.loginError = data.error || 'Sign in failed.';
-        }
-      } catch(err){
-        this.loginError = 'Network error — try again.';
-      } finally {
-        this.loggingIn = false;
-      }
-    },
-
-    logout(){
-      this.isLoggedIn = false; this.token = null; this.leaderName = '';
-      sessionStorage.removeItem('merida_leader_session');
-      this.resetForm();
-      this.resetGalleryForm();
-      this.settingsOpen = false;
-    },
-
-    async fetchActivities(){
-      this.loadingActivities = true;
-      try{
-        const res = await fetch(this.API_URL + '?action=activities');
-        const data = await res.json();
-        if(data.success) this.activities = data.activities;
-      } catch(e){}
-      this.loadingActivities = false;
-    },
-
-    resetForm(){
-      this.form = { title:'', date:'', time:'', category:'Devotional', location:'', description:'' };
-      this.isEditing = false; this.editId = null; this.saveError = '';
-    },
-
-    editActivity(a){
-      this.isEditing = true; this.editId = a.id; this.form = { ...a };
-      window.scrollTo({ top: 0, behavior:'smooth' });
-    },
-
-    async saveActivity(){
-      this.saving = true; this.saveError = '';
-      try{
-        let data;
-        if(this.isEditing){
-          data = await this.callApi({ action:'updateActivity', token:this.token, id:this.editId, activity:this.form });
-        } else {
-          data = await this.callApi({ action:'addActivity', token:this.token, activity:this.form });
-        }
-        if(data.success){
-          await this.fetchActivities();
-          this.showToast(this.isEditing ? 'Activity updated.' : 'Activity published.');
-          this.resetForm();
-        } else {
-          this.saveError = data.error || 'Could not save. Try signing in again.';
-          if(data.error && data.error.includes('Session expired')) this.logout();
-        }
-      } catch(err){
-        this.saveError = 'Network error — try again.';
-      } finally {
-        this.saving = false;
-      }
-    },
-
-    async deleteActivity(id){
-      if(!confirm('Delete this activity?')) return;
-      const data = await this.callApi({ action:'deleteActivity', token:this.token, id });
-      if(data.success){
-        this.activities = this.activities.filter(a => a.id !== id);
-        this.showToast('Activity deleted.');
-      } else if(data.error && data.error.includes('Session expired')){
-        this.logout();
-      }
-    }
+// ---------- Gallery ----------
+gallery: [],
+loadingGallery: false,
+isEditingGallery: false,
+editGalleryId: null,
+savingGallery: false,
+galleryError: '',
+galleryFileError: '',
+galleryForm: { title:'', date:'', description:'', category:'', imageBase64:null, imageMimeType:null, imagePreview:null },
+onGalleryFileChange(e){
+  this.galleryFileError = '';
+  const file = e.target.files && e.target.files[0];
+  if (!file) return;
+  if (!file.type.startsWith('image/')) {
+    this.galleryFileError = 'Please choose an image file.';
+    e.target.value = '';
+    return;
   }
+  const MAX_BYTES = 8 * 1024 * 1024; // 8MB
+  if (file.size > MAX_BYTES) {
+    this.galleryFileError = 'Photo is too large — please choose one under 8MB.';
+    e.target.value = '';
+    return;
+  }
+  const reader = new FileReader();
+  reader.onload = () => {
+    const result = reader.result;
+    const commaIdx = result.indexOf(',');
+    this.galleryForm.imageBase64 = result.slice(commaIdx + 1);
+    this.galleryForm.imageMimeType = file.type;
+    this.galleryForm.imagePreview = result;
+  };
+  reader.onerror = () => {
+    this.galleryFileError = 'Could not read that file — please try again.';
+  };
+  reader.readAsDataURL(file);
+},
+resetGalleryForm(){
+  this.galleryForm = { title:'', date:'', description:'', category:'', imageBase64:null, imageMimeType:null, imagePreview:null };
+  this.isEditingGallery = false; this.editGalleryId = null; this.galleryError = ''; this.galleryFileError = '';
+},
+editGalleryItem(g){
+  this.isEditingGallery = true;
+  this.editGalleryId = g.id;
+  this.galleryForm = {
+    title: g.title, date: g.date, description: g.description, category: g.category || '',
+    imageBase64: null, imageMimeType: null, imagePreview: null
+  };
+  this.galleryError = ''; this.galleryFileError = '';
+  window.scrollTo({ top: 0, behavior:'smooth' });
+},
+async saveGalleryItem(){
+  this.galleryError = '';
+  if (!this.isEditingGallery && !this.galleryForm.imageBase64) {
+    this.galleryError = 'Please choose a photo to upload.';
+    return;
+  }
+  this.savingGallery = true;
+  try{
+    const payload = {
+      title: this.galleryForm.title,
+      date: this.galleryForm.date,
+      description: this.galleryForm.description,
+      category: this.galleryForm.category
+    };
+    if (this.galleryForm.imageBase64) {
+      payload.imageBase64 = this.galleryForm.imageBase64;
+      payload.imageMimeType = this.galleryForm.imageMimeType;
+    }
+    let data;
+    if (this.isEditingGallery) {
+      data = await this.callApi({ action:'updateGalleryItem', token:this.token, id:this.editGalleryId, gallery: payload });
+    } else {
+      data = await this.callApi({ action:'addGalleryItem', token:this.token, gallery: payload });
+    }
+    if (data.success) {
+      await this.fetchGallery();
+      this.showToast(this.isEditingGallery ? 'Photo updated.' : 'Photo uploaded.');
+      this.resetGalleryForm();
+    } else {
+      this.galleryError = data.error || 'Could not save. Try signing in again.';
+      if (data.error && data.error.includes('Session expired')) this.logout();
+    }
+  } catch(err){
+    this.galleryError = 'Network error — try again.';
+  } finally {
+    this.savingGallery = false;
+  }
+},
+async deleteGalleryItem(id){
+  if(!confirm('Delete this photo?')) return;
+  const data = await this.callApi({ action:'deleteGalleryItem', token:this.token, id });
+  if(data.success){
+    this.gallery = this.gallery.filter(g => g.id !== id);
+    this.showToast('Photo deleted.');
+  } else if(data.error && data.error.includes('Session expired')){
+    this.logout();
+  }
+},
+async fetchGallery(){
+  this.loadingGallery = true;
+  try{
+    const res = await fetch(this.API_URL + '?action=gallery');
+    const data = await res.json();
+    if(data.success) this.gallery = data.gallery;
+  } catch(e){}
+  this.loadingGallery = false;
+},
+
+// ---------- Leaders (YSA Leaders — Get To Know Us) ----------
+leaders: [],
+loadingLeaders: false,
+isEditingLeader: false,
+editLeaderId: null,
+savingLeader: false,
+leaderError: '',
+leaderForm: { name:'', role:'', bio:'', imageBase64:null, imageMimeType:null, imagePreview:null },
+resetLeaderForm(){
+  this.leaderForm = { name:'', role:'', bio:'', imageBase64:null, imageMimeType:null, imagePreview:null };
+  this.isEditingLeader = false; this.editLeaderId = null; this.leaderError = '';
+},
+editLeader(l){
+  this.isEditingLeader = true; this.editLeaderId = l.id;
+  this.leaderForm = { name:l.name, role:l.role, bio:l.bio, imageBase64:null, imageMimeType:null, imagePreview:l.image || null };
+  this.leaderError = '';
+  window.scrollTo({ top: 0, behavior:'smooth' });
+},
+async saveLeader(){
+  this.leaderError = ''; this.savingLeader = true;
+  try{
+    const payload = { name:this.leaderForm.name, role:this.leaderForm.role, bio:this.leaderForm.bio };
+    if (this.leaderForm.imageBase64) {
+      payload.imageBase64 = this.leaderForm.imageBase64;
+      payload.imageMimeType = this.leaderForm.imageMimeType;
+    }
+    let data;
+    if (this.isEditingLeader) {
+      data = await this.callApi({ action:'updateLeader', token:this.token, id:this.editLeaderId, leader: payload });
+    } else {
+      data = await this.callApi({ action:'addLeader', token:this.token, leader: payload });
+    }
+    if (data.success) {
+      await this.fetchLeaders();
+      this.showToast(this.isEditingLeader ? 'Leader updated.' : 'Leader added.');
+      this.resetLeaderForm();
+    } else {
+      this.leaderError = data.error || 'Could not save. Try signing in again.';
+      if (data.error && data.error.includes('Session expired')) this.logout();
+    }
+  } catch(err){
+    this.leaderError = 'Network error — try again.';
+  } finally {
+    this.savingLeader = false;
+  }
+},
+async deleteLeader(id){
+  if(!confirm('Delete this leader profile?')) return;
+  const data = await this.callApi({ action:'deleteLeader', token:this.token, id });
+  if(data.success){
+    this.leaders = this.leaders.filter(l => l.id !== id);
+    this.showToast('Leader deleted.');
+  } else if(data.error && data.error.includes('Session expired')){
+    this.logout();
+  }
+},
+async fetchLeaders(){
+  this.loadingLeaders = true;
+  try{
+    const res = await fetch(this.API_URL + '?action=leaders');
+    const data = await res.json();
+    if(data.success) this.leaders = data.leaders;
+  } catch(e){}
+  this.loadingLeaders = false;
+},
+
+// ---------- Members (YSA member directory: photo + testimony) ----------
+members: [],
+loadingMembers: false,
+isEditingMember: false,
+editMemberId: null,
+savingMember: false,
+memberError: '',
+memberForm: { name:'', testimony:'', imageBase64:null, imageMimeType:null, imagePreview:null },
+resetMemberForm(){
+  this.memberForm = { name:'', testimony:'', imageBase64:null, imageMimeType:null, imagePreview:null };
+  this.isEditingMember = false; this.editMemberId = null; this.memberError = '';
+},
+editMember(m){
+  this.isEditingMember = true; this.editMemberId = m.id;
+  this.memberForm = { name:m.name, testimony:m.testimony, imageBase64:null, imageMimeType:null, imagePreview:m.image || null };
+  this.memberError = '';
+  window.scrollTo({ top: 0, behavior:'smooth' });
+},
+async saveMember(){
+  this.memberError = ''; this.savingMember = true;
+  try{
+    const payload = { name:this.memberForm.name, testimony:this.memberForm.testimony };
+    if (this.memberForm.imageBase64) {
+      payload.imageBase64 = this.memberForm.imageBase64;
+      payload.imageMimeType = this.memberForm.imageMimeType;
+    }
+    let data;
+    if (this.isEditingMember) {
+      data = await this.callApi({ action:'updateMember', token:this.token, id:this.editMemberId, member: payload });
+    } else {
+      data = await this.callApi({ action:'addMember', token:this.token, member: payload });
+    }
+    if (data.success) {
+      await this.fetchMembers();
+      this.showToast(this.isEditingMember ? 'Member updated.' : 'Member added.');
+      this.resetMemberForm();
+    } else {
+      this.memberError = data.error || 'Could not save. Try signing in again.';
+      if (data.error && data.error.includes('Session expired')) this.logout();
+    }
+  } catch(err){
+    this.memberError = 'Network error — try again.';
+  } finally {
+    this.savingMember = false;
+  }
+},
+async deleteMember(id){
+  if(!confirm('Delete this member profile?')) return;
+  const data = await this.callApi({ action:'deleteMember', token:this.token, id });
+  if(data.success){
+    this.members = this.members.filter(m => m.id !== id);
+    this.showToast('Member deleted.');
+  } else if(data.error && data.error.includes('Session expired')){
+    this.logout();
+  }
+},
+async fetchMembers(){
+  this.loadingMembers = true;
+  try{
+    const res = await fetch(this.API_URL + '?action=members');
+    const data = await res.json();
+    if(data.success) this.members = data.members;
+  } catch(e){}
+  this.loadingMembers = false;
+},
+
+// ---------- FAQs ----------
+faqs: [],
+loadingFaqs: false,
+isEditingFaq: false,
+editFaqId: null,
+savingFaq: false,
+faqError: '',
+faqForm: { question:'', answer:'', order:0 },
+resetFaqForm(){
+  this.faqForm = { question:'', answer:'', order:0 };
+  this.isEditingFaq = false; this.editFaqId = null; this.faqError = '';
+},
+editFaq(f){
+  this.isEditingFaq = true; this.editFaqId = f.id;
+  this.faqForm = { question:f.question, answer:f.answer, order:f.order || 0 };
+  this.faqError = '';
+  window.scrollTo({ top: 0, behavior:'smooth' });
+},
+async saveFaq(){
+  this.faqError = ''; this.savingFaq = true;
+  try{
+    const payload = { question:this.faqForm.question, answer:this.faqForm.answer, order:this.faqForm.order || 0 };
+    let data;
+    if (this.isEditingFaq) {
+      data = await this.callApi({ action:'updateFaq', token:this.token, id:this.editFaqId, faq: payload });
+    } else {
+      data = await this.callApi({ action:'addFaq', token:this.token, faq: payload });
+    }
+    if (data.success) {
+      await this.fetchFaqs();
+      this.showToast(this.isEditingFaq ? 'FAQ updated.' : 'FAQ added.');
+      this.resetFaqForm();
+    } else {
+      this.faqError = data.error || 'Could not save. Try signing in again.';
+      if (data.error && data.error.includes('Session expired')) this.logout();
+    }
+  } catch(err){
+    this.faqError = 'Network error — try again.';
+  } finally {
+    this.savingFaq = false;
+  }
+},
+async deleteFaq(id){
+  if(!confirm('Delete this FAQ?')) return;
+  const data = await this.callApi({ action:'deleteFaq', token:this.token, id });
+  if(data.success){
+    this.faqs = this.faqs.filter(f => f.id !== id);
+    this.showToast('FAQ deleted.');
+  } else if(data.error && data.error.includes('Session expired')){
+    this.logout();
+  }
+},
+async fetchFaqs(){
+  this.loadingFaqs = true;
+  try{
+    const res = await fetch(this.API_URL + '?action=faqs');
+    const data = await res.json();
+    if(data.success) this.faqs = data.faqs;
+  } catch(e){}
+  this.loadingFaqs = false;
+},
+
+// ---------- Come Follow Me: Facilitator Schedule ----------
+classSchedule: [],
+loadingSchedule: false,
+isEditingSession: false,
+editSessionId: null,
+savingSession: false,
+sessionError: '',
+sessionForm: { date:'', facilitator:'', topic:'' },
+resetSessionForm(){
+  this.sessionForm = { date:'', facilitator:'', topic:'' };
+  this.isEditingSession = false; this.editSessionId = null; this.sessionError = '';
+},
+editSession(s){
+  this.isEditingSession = true; this.editSessionId = s.id;
+  this.sessionForm = { date:s.date, facilitator:s.facilitator, topic:s.topic };
+  this.sessionError = '';
+  window.scrollTo({ top: 0, behavior:'smooth' });
+},
+async saveSession(){
+  this.sessionError = ''; this.savingSession = true;
+  try{
+    const payload = { date:this.sessionForm.date, facilitator:this.sessionForm.facilitator, topic:this.sessionForm.topic };
+    let data;
+    if (this.isEditingSession) {
+      data = await this.callApi({ action:'updateClassSession', token:this.token, id:this.editSessionId, session: payload });
+    } else {
+      data = await this.callApi({ action:'addClassSession', token:this.token, session: payload });
+    }
+    if (data.success) {
+      await this.fetchClassSchedule();
+      this.showToast(this.isEditingSession ? 'Session updated.' : 'Session added.');
+      this.resetSessionForm();
+    } else {
+      this.sessionError = data.error || 'Could not save. Try signing in again.';
+      if (data.error && data.error.includes('Session expired')) this.logout();
+    }
+  } catch(err){
+    this.sessionError = 'Network error — try again.';
+  } finally {
+    this.savingSession = false;
+  }
+},
+async deleteSession(id){
+  if(!confirm('Delete this session?')) return;
+  const data = await this.callApi({ action:'deleteClassSession', token:this.token, id });
+  if(data.success){
+    this.classSchedule = this.classSchedule.filter(s => s.id !== id);
+    this.showToast('Session deleted.');
+  } else if(data.error && data.error.includes('Session expired')){
+    this.logout();
+  }
+},
+async fetchClassSchedule(){
+  this.loadingSchedule = true;
+  try{
+    const res = await fetch(this.API_URL + '?action=classSchedule');
+    const data = await res.json();
+    if(data.success) this.classSchedule = data.classSchedule;
+  } catch(e){}
+  this.loadingSchedule = false;
+},
+
+// ---------- Password change ----------
+settingsOpen: false,
+showPw1: false, showPw2: false,
+pwForm: { currentPassword:'', newPassword:'', confirmPassword:'' },
+pwError: '',
+changingPw: false,
+openSettings(){
+  this.pwForm = { currentPassword:'', newPassword:'', confirmPassword:'' };
+  this.pwError = '';
+  this.showPw1 = false; this.showPw2 = false;
+  this.settingsOpen = true;
+},
+async submitPasswordChange(){
+  this.pwError = '';
+  if (this.pwForm.newPassword !== this.pwForm.confirmPassword) {
+    this.pwError = 'New password and confirmation don\u2019t match.';
+    return;
+  }
+  this.changingPw = true;
+  try{
+    const data = await this.callApi({
+      action:'changePassword', token:this.token,
+      currentPassword:this.pwForm.currentPassword, newPassword:this.pwForm.newPassword
+    });
+    if(data.success){
+      this.settingsOpen = false;
+      this.showToast('Password updated.');
+    } else {
+      this.pwError = data.error || 'Could not update password.';
+      if(data.error && data.error.includes('Session expired')) this.logout();
+    }
+  } catch(err){
+    this.pwError = 'Network error — try again.';
+  } finally {
+    this.changingPw = false;
+  }
+},
+
+// ---------- Toast ----------
+toast: '',
+_toastTimer: null,
+showToast(msg){
+  this.toast = msg;
+  clearTimeout(this._toastTimer);
+  this._toastTimer = setTimeout(() => this.toast = '', 2500);
+},
+
+// ---------- Lifecycle ----------
+init(){
+  if(!this.API_URL || this.API_URL.includes('PASTE_YOUR')){
+    this.apiNotConfigured = true;
+  }
+  const saved = sessionStorage.getItem('merida_leader_session');
+  if(saved){
+    try{
+      const s = JSON.parse(saved);
+      this.token = s.token; this.leaderName = s.name; this.isLoggedIn = true;
+      this.fetchAll();
+    } catch(e){}
+  }
+},
+fetchAll(){
+  this.fetchActivities();
+  this.fetchGallery();
+  this.fetchLeaders();
+  this.fetchMembers();
+  this.fetchFaqs();
+  this.fetchClassSchedule();
+},
+formatDate(dateString){
+  const options = { year:'numeric', month:'long', day:'numeric' };
+  const [y,m,d] = String(dateString).split('-').map(Number);
+  if(!y||!m||!d) return dateString;
+  return new Date(y, m-1, d).toLocaleDateString(undefined, options);
+},
+async callApi(payload){
+  const res = await fetch(this.API_URL, {
+    method: 'POST',
+    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+    body: JSON.stringify(payload)
+  });
+  return res.json();
+},
+async login(){
+  this.loginError = ''; this.loggingIn = true;
+  try{
+    const data = await this.callApi({ action:'login', username:this.loginForm.username, password:this.loginForm.password });
+    if(data.success){
+      this.token = data.token; this.leaderName = data.name; this.isLoggedIn = true;
+      sessionStorage.setItem('merida_leader_session', JSON.stringify({ token:data.token, name:data.name }));
+      this.loginForm = { username:'', password:'' };
+      this.fetchAll();
+      this.showToast('Welcome back, ' + data.name + '.');
+    } else {
+      this.loginError = data.error || 'Sign in failed.';
+    }
+  } catch(err){
+    this.loginError = 'Network error — try again.';
+  } finally {
+    this.loggingIn = false;
+  }
+},
+logout(){
+  this.isLoggedIn = false; this.token = null; this.leaderName = '';
+  sessionStorage.removeItem('merida_leader_session');
+  this.resetForm();
+  this.resetGalleryForm();
+  this.resetLeaderForm();
+  this.resetMemberForm();
+  this.resetFaqForm();
+  this.resetSessionForm();
+  this.settingsOpen = false;
+},
+async fetchActivities(){
+  this.loadingActivities = true;
+  try{
+    const res = await fetch(this.API_URL + '?action=activities');
+    const data = await res.json();
+    if(data.success) this.activities = data.activities;
+  } catch(e){}
+  this.loadingActivities = false;
+},
+resetForm(){
+  this.form = { title:'', date:'', time:'', category:'', location:'', description:'' };
+  this.isEditing = false; this.editId = null; this.saveError = '';
+},
+editActivity(a){
+  this.isEditing = true; this.editId = a.id; this.form = { ...a };
+  window.scrollTo({ top: 0, behavior:'smooth' });
+},
+async saveActivity(){
+  this.saving = true; this.saveError = '';
+  try{
+    let data;
+    if(this.isEditing){
+      data = await this.callApi({ action:'updateActivity', token:this.token, id:this.editId, activity:this.form });
+    } else {
+      data = await this.callApi({ action:'addActivity', token:this.token, activity:this.form });
+    }
+    if(data.success){
+      await this.fetchActivities();
+      this.showToast(this.isEditing ? 'Activity updated.' : 'Activity published.');
+      this.resetForm();
+    } else {
+      this.saveError = data.error || 'Could not save. Try signing in again.';
+      if(data.error && data.error.includes('Session expired')) this.logout();
+    }
+  } catch(err){
+    this.saveError = 'Network error — try again.';
+  } finally {
+    this.saving = false;
+  }
+},
+async deleteActivity(id){
+  if(!confirm('Delete this activity?')) return;
+  const data = await this.callApi({ action:'deleteActivity', token:this.token, id });
+  if(data.success){
+    this.activities = this.activities.filter(a => a.id !== id);
+    this.showToast('Activity deleted.');
+  } else if(data.error && data.error.includes('Session expired')){
+    this.logout();
+  }
+}
+}
 }
 </script>
 </body>
